@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\DeutschQuiz.Domain\DeutschQuiz.Domain.csproj" />
+    <ProjectReference Include="..\DeutschQuiz.Application\DeutschQuiz.Application.csproj" />
+    <ProjectReference Include="..\DeutschQuiz.Infrastructure\DeutschQuiz.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

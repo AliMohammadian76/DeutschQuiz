@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="backend/src/DeutschQuiz.Api/DeutschQuiz.Api.csproj" />
+    <Project Path="backend/src/DeutschQuiz.Application/DeutschQuiz.Application.csproj" />
+    <Project Path="backend/src/DeutschQuiz.Domain/DeutschQuiz.Domain.csproj" />
+    <Project Path="backend/src/DeutschQuiz.Infrastructure/DeutschQuiz.Infrastructure.csproj" />
+  </Folder>
+</Solution>

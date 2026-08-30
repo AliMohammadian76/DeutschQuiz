@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+.env
+.env.*
+!.env.example
+*.user
+*.suo
+*.vsix
+*.pdb
+*.log
