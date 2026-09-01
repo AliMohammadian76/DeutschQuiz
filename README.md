@@ -7,6 +7,12 @@
 - `backend/` — API مستقل با ASP.NET Core و Clean Architecture
 - `frontend/` — رابط کاربری مستقل با Next.js، TypeScript و Tailwind CSS
 
+## وضعیت فعلی
+
+- آزمون‌های واژگان، گرامر و جامع برای `Menschen A1.1 / Lektion 1`
+- ثبت‌نام، ورود با JWT و نمایش پیشرفت کاربر
+- ثبت نتیجه‌ی آزمون و زمان پاسخ‌گویی به هر سؤال
+
 ## اجرای بک‌اند
 
 ```bash
