@@ -3,6 +3,7 @@
 frontend/node_modules/
 frontend/.next/
 frontend/out/
+.artifacts/
 .env
 .env.*
 !.env.example

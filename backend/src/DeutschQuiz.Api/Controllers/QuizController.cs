@@ -1,4 +1,5 @@
 using DeutschQuiz.Application;
+using DeutschQuiz.Api.Contracts;
 using DeutschQuiz.Domain;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,12 +13,28 @@ public sealed class QuizController(IQuizService quizService) : ControllerBase
     public IActionResult Health() => Ok(new { status = "ok", service = "DeutschQuiz.Api" });
 
     [HttpGet("lessons")]
-    public IReadOnlyList<Lesson> Lessons() => quizService.GetLessons();
+    public async Task<ActionResult<IReadOnlyList<Lesson>>> Lessons(
+        CancellationToken cancellationToken)
+    {
+        var lessons = await quizService.GetLessonsAsync(cancellationToken);
+        return Ok(lessons);
+    }
 
     [HttpGet("lessons/{lessonId:guid}/questions")]
-    public ActionResult<IReadOnlyList<QuizQuestion>> Questions(Guid lessonId, [FromQuery] QuizCategory? category = null)
+    public async Task<ActionResult<IReadOnlyList<QuizQuestionResponse>>> Questions(
+        Guid lessonId,
+        [FromQuery] QuizCategory? category = null,
+        CancellationToken cancellationToken = default)
     {
-        var questions = quizService.GetQuestions(lessonId, category);
-        return questions.Count == 0 ? NotFound() : Ok(questions);
+        var questions = await quizService.GetQuestionsAsync(lessonId, category, cancellationToken);
+        return questions.Count == 0
+            ? NotFound()
+            : Ok(questions.Select(question => new QuizQuestionResponse(
+                question.Id,
+                question.LessonId,
+                question.Category,
+                question.Type,
+                question.Prompt,
+                question.Options)));
     }
 }
