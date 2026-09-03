@@ -129,7 +129,17 @@ public sealed record AttemptResult(
     int CorrectAnswers,
     decimal Score,
     int TotalTimeMs,
-    DateTime CompletedAtUtc);
+    DateTime CompletedAtUtc,
+    IReadOnlyList<AttemptAnswerResult> Answers);
+
+public sealed record AttemptAnswerResult(
+    Guid QuestionId,
+    string Prompt,
+    string SelectedAnswer,
+    string CorrectAnswer,
+    bool IsCorrect,
+    string Explanation,
+    int ResponseTimeMs);
 
 public sealed record ProgressSummary(
     int AttemptsCount,

@@ -49,6 +49,7 @@ public sealed class ProgressService(QuizDbContext db) : IProgressService
         var completedAtUtc = DateTime.UtcNow;
         var startedAtUtc = request.StartedAtUtc?.ToUniversalTime() ?? completedAtUtc;
         var answerEntities = new List<QuizAttemptAnswerEntity>(answers.Count);
+        var answerResults = new List<AttemptAnswerResult>(answers.Count);
         var correctAnswers = 0;
 
         foreach (var answer in answers)
@@ -74,6 +75,15 @@ public sealed class ProgressService(QuizDbContext db) : IProgressService
                 ResponseTimeMs = Math.Max(0, answer.ResponseTimeMs),
                 AnsweredAtUtc = completedAtUtc
             });
+
+            answerResults.Add(new AttemptAnswerResult(
+                question.Id,
+                question.Prompt,
+                selectedAnswer,
+                question.CorrectAnswer,
+                isCorrect,
+                question.Explanation,
+                Math.Max(0, answer.ResponseTimeMs)));
         }
 
         var totalQuestions = questions.Count;
@@ -105,7 +115,8 @@ public sealed class ProgressService(QuizDbContext db) : IProgressService
             correctAnswers,
             score,
             attempt.TotalTimeMs,
-            completedAtUtc);
+            completedAtUtc,
+            answerResults);
     }
 
     public async Task<ProgressSummary> GetSummaryAsync(

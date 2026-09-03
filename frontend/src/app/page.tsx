@@ -48,6 +48,16 @@ type AttemptResult = {
   correctAnswers: number;
   score: number;
   totalTimeMs: number;
+  answers: AttemptAnswerResult[];
+};
+type AttemptAnswerResult = {
+  questionId: string;
+  prompt: string;
+  selectedAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+  explanation: string;
+  responseTimeMs: number;
 };
 type ProgressSummary = {
   attemptsCount: number;
@@ -306,6 +316,11 @@ export default function Home() {
             <p className="mt-5 text-sm font-bold text-cyan-600">آزمون تمام شد</p>
             <h2 className="mt-2 text-3xl font-black text-[#172033]">{Math.round(quizResult.score)}٪</h2>
             <p className="mt-3 text-sm text-slate-500">{quizResult.correctAnswers} پاسخ درست از {quizResult.totalQuestions} سؤال · {Math.round(quizResult.totalTimeMs / 1000)} ثانیه</p>
+            <div className="mt-7 space-y-3 text-right">
+              {quizResult.answers.map((answer, index) => <div key={answer.questionId} className={`rounded-2xl border p-4 ${answer.isCorrect ? "border-emerald-100 bg-emerald-50/70" : "border-rose-100 bg-rose-50/70"}`}>
+                <div className="flex items-start gap-3"><span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-black ${answer.isCorrect ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"}`}>{answer.isCorrect ? "✓" : "×"}</span><div className="min-w-0 flex-1"><p className="text-sm font-bold text-slate-800" dir="ltr">{index + 1}. {answer.prompt}</p><p className="mt-2 text-xs text-slate-600" dir="ltr">پاسخ تو: <span className="font-bold">{answer.selectedAnswer}</span>{!answer.isCorrect && <> · پاسخ درست: <span className="font-bold text-emerald-700">{answer.correctAnswer}</span></>}</p>{answer.explanation && <p className="mt-2 text-xs leading-6 text-slate-500">{answer.explanation}</p>}</div></div>
+              </div>)}
+            </div>
             <button onClick={() => setQuizOpen(false)} className="mt-7 rounded-2xl bg-cyan-600 px-6 py-3 text-sm font-bold text-white">بازگشت به صفحه اصلی</button>
           </div> : <>
             <div className="flex items-start justify-between gap-4">
