@@ -31,4 +31,11 @@ public sealed class UnavailableProgressService : IProgressService
         CancellationToken cancellationToken = default) =>
         throw new NotSupportedException(
             "Progress features require a configured PostgreSQL database and JWT signing key.");
+
+    public Task<IReadOnlyList<AttemptHistoryItem>> GetHistoryAsync(
+        Guid userId,
+        int limit = 20,
+        CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException(
+            "Progress features require a configured PostgreSQL database and JWT signing key.");
 }

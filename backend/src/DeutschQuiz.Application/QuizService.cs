@@ -160,6 +160,20 @@ public sealed record ProgressLessonSummary(
     decimal AverageScore,
     DateTime? LastAttemptAtUtc);
 
+public sealed record AttemptHistoryItem(
+    Guid AttemptId,
+    Guid LessonId,
+    string Book,
+    string Level,
+    int LessonNumber,
+    string Title,
+    QuizCategory Category,
+    int TotalQuestions,
+    int CorrectAnswers,
+    decimal Score,
+    int TotalTimeMs,
+    DateTime? CompletedAtUtc);
+
 public interface IProgressService
 {
     Task<AttemptResult?> SubmitAsync(
@@ -169,5 +183,10 @@ public interface IProgressService
 
     Task<ProgressSummary> GetSummaryAsync(
         Guid userId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<AttemptHistoryItem>> GetHistoryAsync(
+        Guid userId,
+        int limit = 20,
         CancellationToken cancellationToken = default);
 }

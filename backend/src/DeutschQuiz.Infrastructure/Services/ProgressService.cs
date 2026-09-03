@@ -161,4 +161,32 @@ public sealed class ProgressService(QuizDbContext db) : IProgressService
             attempts.Sum(attempt => attempt.TotalTimeMs),
             lessons);
     }
+
+    public async Task<IReadOnlyList<AttemptHistoryItem>> GetHistoryAsync(
+        Guid userId,
+        int limit = 20,
+        CancellationToken cancellationToken = default)
+    {
+        var safeLimit = Math.Clamp(limit, 1, 100);
+
+        return await db.QuizAttempts
+            .AsNoTracking()
+            .Where(attempt => attempt.UserId == userId)
+            .OrderByDescending(attempt => attempt.CompletedAtUtc)
+            .Take(safeLimit)
+            .Select(attempt => new AttemptHistoryItem(
+                attempt.Id,
+                attempt.LessonId,
+                attempt.Lesson.Book.Name,
+                attempt.Lesson.Book.Level,
+                attempt.Lesson.Number,
+                attempt.Lesson.Title,
+                attempt.Category,
+                attempt.TotalQuestions,
+                attempt.CorrectAnswers,
+                attempt.Score ?? 0m,
+                attempt.TotalTimeMs,
+                attempt.CompletedAtUtc))
+            .ToListAsync(cancellationToken);
+    }
 }

@@ -42,6 +42,22 @@ public sealed class ProgressController(IProgressService progressService) : Contr
         return Ok(await progressService.GetSummaryAsync(userId, cancellationToken));
     }
 
+    [HttpGet("progress/history")]
+    public async Task<ActionResult<IReadOnlyList<AttemptHistoryItem>>> History(
+        [FromQuery] int limit = 20,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(await progressService.GetHistoryAsync(
+            userId,
+            limit,
+            cancellationToken));
+    }
+
     private bool TryGetUserId(out Guid userId) =>
         Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out userId);
 }

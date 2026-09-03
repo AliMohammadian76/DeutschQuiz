@@ -67,6 +67,20 @@ type ProgressSummary = {
   totalCorrectAnswers: number;
   totalTimeMs: number;
 };
+type AttemptHistoryItem = {
+  attemptId: string;
+  lessonId: string;
+  book: string;
+  level: string;
+  lessonNumber: number;
+  title: string;
+  category: QuizCategory;
+  totalQuestions: number;
+  correctAnswers: number;
+  score: number;
+  totalTimeMs: number;
+  completedAtUtc: string | null;
+};
 
 const lessonId = "11111111-1111-1111-1111-111111111111";
 
@@ -92,6 +106,8 @@ export default function Home() {
   const [userName, setUserName] = useState("");
   const [progress, setProgress] = useState<ProgressSummary | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
+  const [history, setHistory] = useState<AttemptHistoryItem[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
   const [quizCategory, setQuizCategory] = useState<QuizCategory>("Mixed");
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
@@ -114,6 +130,18 @@ export default function Home() {
       if (response.ok) setProgress(await response.json());
     } finally {
       setProgressLoading(false);
+    }
+  }
+
+  async function loadHistory(accessToken: string) {
+    setHistoryLoading(true);
+    try {
+      const response = await fetch(`${apiBaseUrl}/progress/history?limit=10`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (response.ok) setHistory(await response.json());
+    } finally {
+      setHistoryLoading(false);
     }
   }
 
@@ -201,6 +229,7 @@ export default function Home() {
       const result = (await response.json()) as AttemptResult;
       setQuizResult(result);
       await loadProgress(token);
+      await loadHistory(token);
     } catch (error) {
       setQuizError(
         error instanceof Error ? error.message : "ثبت نتیجه انجام نشد.",
@@ -219,6 +248,7 @@ export default function Home() {
       setToken(savedToken);
       setUserName(savedName ?? "");
       void loadProgress(savedToken);
+      void loadHistory(savedToken);
     }, 0);
 
     return () => window.clearTimeout(timer);
@@ -250,6 +280,7 @@ export default function Home() {
       setAuthOpen(false);
       setPassword("");
       await loadProgress(result.accessToken);
+      await loadHistory(result.accessToken);
     } catch (error) {
       setAuthError(error instanceof Error ? error.message : "خطایی رخ داد.");
     } finally {
@@ -263,6 +294,7 @@ export default function Home() {
     setToken(null);
     setUserName("");
     setProgress(null);
+    setHistory([]);
   }
 
   function openAuth(mode: AuthMode) {
@@ -303,6 +335,17 @@ export default function Home() {
         </section>
 
         {progress && <section className="mt-12 grid gap-4 sm:grid-cols-4">{[["میانگین نمره", `${Math.round(progress.averageScore)}٪`], ["بهترین نمره", `${progress.bestScore}٪`], ["پاسخ درست", `${progress.totalCorrectAnswers} از ${progress.totalQuestionsAnswered}`], ["زمان پاسخ", `${Math.round(progress.totalTimeMs / 1000)} ثانیه`]].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><p className="text-xs text-slate-400">{label}</p><p className="mt-2 text-xl font-black text-[#172033]">{value}</p></div>)}</section>}
+
+        {token && <section className="mt-12 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7">
+          <div className="flex items-center justify-between gap-4">
+            <div><p className="text-sm font-bold text-cyan-600">تلاش‌های اخیر</p><h2 className="mt-2 text-2xl font-black text-[#172033]">تاریخچه‌ی آزمون‌ها</h2></div>
+            <button onClick={() => void loadHistory(token)} disabled={historyLoading} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 disabled:opacity-50">{historyLoading ? "در حال بارگذاری..." : "به‌روزرسانی"}</button>
+          </div>
+          {history.length === 0 ? <p className="mt-6 rounded-2xl bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">{historyLoading ? "در حال دریافت تاریخچه..." : "هنوز آزمونی ثبت نکرده‌ای."}</p> : <div className="mt-6 space-y-3">{history.map((attempt) => <div key={attempt.attemptId} className="flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div><div className="flex items-center gap-2"><span className="text-sm font-black text-slate-800">{attempt.category === "Vocabulary" ? "واژگان" : attempt.category === "Grammar" ? "گرامر" : "جامع"}</span><span className="text-xs text-slate-400">· {attempt.book} {attempt.level} · Lektion {attempt.lessonNumber}</span></div><p className="mt-1 text-xs text-slate-500">{attempt.completedAtUtc ? new Date(attempt.completedAtUtc).toLocaleString("fa-IR", { dateStyle: "medium", timeStyle: "short" }) : "تاریخ نامشخص"}</p></div>
+            <div className="flex items-center gap-5 text-left"><div><span className="block text-lg font-black text-cyan-700">{Math.round(attempt.score)}٪</span><span className="text-[11px] text-slate-400">{attempt.correctAnswers} از {attempt.totalQuestions} درست</span></div><div><span className="block text-sm font-bold text-slate-700">{Math.round(attempt.totalTimeMs / 1000)} ثانیه</span><span className="text-[11px] text-slate-400">زمان پاسخ</span></div></div>
+          </div>)}</div>}
+        </section>}
 
         <section className="mt-20 pb-12"><div className="mb-7 flex items-end justify-between"><div><p className="text-sm font-bold text-cyan-600">انتخاب کن و شروع کن</p><h2 className="mt-2 text-2xl font-black">نوع آزمون را انتخاب کن</h2></div><span className="text-sm text-slate-400">۳ حالت آزمون</span></div>
           <div className="grid gap-5 md:grid-cols-3">{quizModes.map((mode) => <button key={mode.category} onClick={() => void startQuiz(mode.category)} disabled={quizLoading} className="group text-right disabled:cursor-wait"><div className="h-full rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"><div className={`grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br ${mode.color} text-xl font-black text-white shadow-lg`}>{mode.icon}</div><div className="mt-5 flex items-center gap-2"><h3 className="text-lg font-black">{mode.title}</h3><span className="text-xs text-slate-400">{mode.subtitle}</span></div><p className="mt-3 text-sm leading-7 text-slate-500">{mode.description}</p><div className="mt-6 text-sm font-bold text-cyan-600">شروع کن ←</div></div></button>)}</div>
