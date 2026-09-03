@@ -1,3 +1,4 @@
+using DeutschQuiz.Application;
 using DeutschQuiz.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,119 +9,79 @@ public static class QuizDbSeeder
     private static readonly Guid BookId =
         Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
 
-    private static readonly Guid LessonId =
-        Guid.Parse("11111111-1111-1111-1111-111111111111");
-
     public static async Task SeedAsync(
         QuizDbContext db,
         CancellationToken cancellationToken = default)
     {
         await db.Database.MigrateAsync(cancellationToken);
 
-        if (await db.Books.AnyAsync(cancellationToken))
-        {
-            return;
-        }
+        var book = await db.Books
+            .Include(item => item.Lessons)
+            .SingleOrDefaultAsync(item => item.Id == BookId, cancellationToken);
 
-        var book = new BookEntity
+        if (book is null)
         {
-            Id = BookId,
-            Name = "Menschen",
-            Level = "A1.1",
-            Publisher = "Hueber"
-        };
-
-        var lesson = new LessonEntity
-        {
-            Id = LessonId,
-            BookId = BookId,
-            Number = 1,
-            Title = "Hallo! Ich bin ...",
-            Book = book
-        };
-
-        var questions = new[]
-        {
-            CreateQuestion(
-                "20000000-0000-0000-0000-000000000001",
-                QuizCategory.Vocabulary,
-                "Wie geht es dir?",
-                "Wie geht's?",
-                "Diese Frage fragt nach dem Befinden.",
-                "Wie geht's?",
-                "Wo wohnst du?",
-                "Wie heißt du?"),
-            CreateQuestion(
-                "20000000-0000-0000-0000-000000000002",
-                QuizCategory.Vocabulary,
-                "Ergänze: Ich ___ Ali.",
-                "bin",
-                "Mit ich verwenden wir die Form bin.",
-                "bin",
-                "bist",
-                "sind"),
-            CreateQuestion(
-                "20000000-0000-0000-0000-000000000003",
-                QuizCategory.Grammar,
-                "___ heißt du?",
-                "Wie",
-                "Die richtige Frage lautet: Wie heißt du?",
-                "Wie",
-                "Wo",
-                "Was"),
-            CreateQuestion(
-                "20000000-0000-0000-0000-000000000004",
-                QuizCategory.Grammar,
-                "Ich ___ aus dem Iran.",
-                "komme",
-                "Die Form von kommen für ich ist komme.",
-                "komme",
-                "kommst",
-                "kommen")
-        };
-
-        foreach (var question in questions)
-        {
-            question.LessonId = LessonId;
-            question.Lesson = lesson;
-            lesson.Questions.Add(question);
-        }
-
-        db.Books.Add(book);
-        db.Lessons.Add(lesson);
-        db.Questions.AddRange(questions);
-        await db.SaveChangesAsync(cancellationToken);
-    }
-
-    private static QuizQuestionEntity CreateQuestion(
-        string id,
-        QuizCategory category,
-        string prompt,
-        string correctAnswer,
-        string explanation,
-        params string[] options)
-    {
-        var question = new QuizQuestionEntity
-        {
-            Id = Guid.Parse(id),
-            Category = category,
-            Type = QuestionType.MultipleChoice,
-            Prompt = prompt,
-            CorrectAnswer = correctAnswer,
-            Explanation = explanation
-        };
-
-        for (var index = 0; index < options.Length; index++)
-        {
-            question.Options.Add(new QuestionOptionEntity
+            book = new BookEntity
             {
-                Id = Guid.NewGuid(),
-                SortOrder = index,
-                Text = options[index],
-                Question = question
-            });
+                Id = BookId,
+                Name = "Menschen",
+                Level = "A1.1",
+                Publisher = "Hueber"
+            };
+            db.Books.Add(book);
         }
 
-        return question;
+        foreach (var content in QuizContentCatalog.Lessons)
+        {
+            var lesson = book.Lessons.SingleOrDefault(item => item.Id == content.Lesson.Id);
+            if (lesson is null)
+            {
+                lesson = new LessonEntity
+                {
+                    Id = content.Lesson.Id,
+                    BookId = book.Id,
+                    Number = content.Lesson.Number,
+                    Title = content.Lesson.Title,
+                    Book = book
+                };
+                db.Lessons.Add(lesson);
+            }
+
+            var existingQuestionIds = await db.Questions
+                .Where(question => question.LessonId == lesson.Id)
+                .Select(question => question.Id)
+                .ToListAsync(cancellationToken);
+
+            foreach (var question in content.Questions.Where(question =>
+                         !existingQuestionIds.Contains(question.Id)))
+            {
+                var entity = new QuizQuestionEntity
+                {
+                    Id = question.Id,
+                    LessonId = lesson.Id,
+                    Category = question.Category,
+                    Type = question.Type,
+                    Prompt = question.Prompt,
+                    CorrectAnswer = question.CorrectAnswer,
+                    Explanation = question.Explanation,
+                    Lesson = lesson
+                };
+
+                for (var index = 0; index < question.Options.Count; index++)
+                {
+                    entity.Options.Add(new QuestionOptionEntity
+                    {
+                        Id = Guid.NewGuid(),
+                        SortOrder = index,
+                        Text = question.Options[index],
+                        Question = entity
+                    });
+                }
+
+                db.Questions.Add(entity);
+            }
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
     }
 }

@@ -9,7 +9,9 @@
 
 ## وضعیت فعلی
 
-- آزمون‌های واژگان، گرامر و جامع برای `Menschen A1.1 / Lektion 1`
+- آزمون‌های درس‌به‌درس برای هر ۱۲ درس `Menschen A1.1`
+- سه حالت آزمون برای هر درس: واژگان (`Vocabulary`)، گرامر (`Grammar`) و جامع (`Mixed`)
+- انتخاب درس از رابط کاربری و دریافت سؤال‌های همان درس از API
 - ثبت‌نام، ورود با JWT و نمایش پیشرفت کاربر
 - ثبت نتیجه‌ی آزمون و زمان پاسخ‌گویی به هر سؤال
 
@@ -23,7 +25,22 @@ APIهای اولیه:
 
 - `GET /api/health`
 - `GET /api/lessons`
-- `GET /api/lessons/{lessonId}/questions?category=Vocabulary`
+- `GET /api/lessons/{lessonId}/questions?category=Vocabulary|Grammar|Mixed`
+
+کاتالوگ فعلی شامل این درس‌هاست:
+
+1. `Hallo! Ich bin ...`
+2. `Familie und Freunde`
+3. `Zahlen und Alltag`
+4. `Essen und Trinken`
+5. `Wohnen`
+6. `Freizeit`
+7. `Arbeit und Termine`
+8. `Kleidung und Farben`
+9. `Gesundheit`
+10. `Unterwegs`
+11. `Wetter und Jahreszeiten`
+12. `Reisen und Pläne`
 
 ## حساب کاربری و پیشرفت
 
@@ -96,7 +113,7 @@ $env:ConnectionStrings__DeutschQuiz = "Host=localhost;Port=5432;Database=deutsch
 dotnet run --project backend/src/DeutschQuiz.Api
 ```
 
-در اولین اجرای API، migrationها و داده‌ی نمونه‌ی `Menschen A1.1 / Lektion 1` به صورت خودکار اعمال می‌شوند.
+در اولین اجرای API، migrationها و داده‌های نمونه‌ی هر ۱۲ درس `Menschen A1.1` به صورت خودکار اعمال می‌شوند. Seeder به شکل افزایشی کار می‌کند؛ بنابراین با اجرای مجدد، درس‌ها و سؤال‌های موجود دوباره درج نمی‌شوند.
 از این مرحله به بعد، تغییرات schema با EF Core migration نسخه‌بندی می‌شوند.
 
 ## اجرای فرانت‌اند

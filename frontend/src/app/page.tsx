@@ -43,6 +43,13 @@ type QuizQuestion = {
   prompt: string;
   options: string[];
 };
+type Lesson = {
+  id: string;
+  book: string;
+  level: string;
+  number: number;
+  title: string;
+};
 type AttemptResult = {
   totalQuestions: number;
   correctAnswers: number;
@@ -82,7 +89,7 @@ type AttemptHistoryItem = {
   completedAtUtc: string | null;
 };
 
-const lessonId = "11111111-1111-1111-1111-111111111111";
+const defaultLessonId = "11111111-1111-1111-1111-111111111111";
 
 async function getError(response: Response) {
   try {
@@ -106,6 +113,10 @@ export default function Home() {
   const [userName, setUserName] = useState("");
   const [progress, setProgress] = useState<ProgressSummary | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [selectedLessonId, setSelectedLessonId] = useState(defaultLessonId);
+  const [lessonsLoading, setLessonsLoading] = useState(false);
+  const [lessonsError, setLessonsError] = useState("");
   const [history, setHistory] = useState<AttemptHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [quizOpen, setQuizOpen] = useState(false);
@@ -152,7 +163,7 @@ export default function Home() {
     setQuizResult(null);
     try {
       const response = await fetch(
-        `${apiBaseUrl}/lessons/${lessonId}/questions?category=${category}`,
+        `${apiBaseUrl}/lessons/${selectedLessonId}/questions?category=${category}`,
       );
       if (!response.ok) throw new Error("سؤال‌های این آزمون در دسترس نیست.");
       const questions = (await response.json()) as QuizQuestion[];
@@ -219,7 +230,7 @@ export default function Home() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          lessonId,
+          lessonId: selectedLessonId,
           category: quizCategory,
           startedAtUtc: quizStartedAt,
           answers,
@@ -238,6 +249,36 @@ export default function Home() {
       setQuizSubmitting(false);
     }
   }
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setLessonsLoading(true);
+      setLessonsError("");
+      void fetch(`${apiBaseUrl}/lessons`)
+        .then(async (response) => {
+          if (!response.ok) throw new Error("فهرست درس‌ها در دسترس نیست.");
+          return (await response.json()) as Lesson[];
+        })
+        .then((result) => {
+          setLessons(result);
+          setSelectedLessonId((current) =>
+            result.length > 0 && result.some((lesson) => lesson.id === current)
+              ? current
+              : result[0]?.id ?? current,
+          );
+        })
+        .catch((error: unknown) => {
+          setLessonsError(
+            error instanceof Error
+              ? error.message
+              : "دریافت درس‌ها انجام نشد.",
+          );
+        })
+        .finally(() => setLessonsLoading(false));
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("deutschquiz.accessToken");
@@ -304,6 +345,7 @@ export default function Home() {
   }
 
   const activeQuestion = quizQuestions[quizIndex];
+  const selectedLesson = lessons.find((lesson) => lesson.id === selectedLessonId);
 
   return (
     <main className="min-h-screen overflow-hidden">
@@ -321,16 +363,16 @@ export default function Home() {
 
         <section className="relative mt-14 grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="relative z-10">
-            <span className="inline-flex rounded-full bg-cyan-50 px-4 py-2 text-xs font-bold text-cyan-700">Menschen · A1.1 · Lektion 1</span>
+            <span className="inline-flex rounded-full bg-cyan-50 px-4 py-2 text-xs font-bold text-cyan-700">Menschen · A1.1 · Lektion {selectedLesson?.number ?? 1}</span>
             <h1 className="mt-6 max-w-xl text-4xl font-black leading-[1.2] tracking-tight text-[#172033] sm:text-6xl">هر روز کمی بهتر،<span className="block text-cyan-600">یک سؤال در هر لحظه.</span></h1>
             <p className="mt-6 max-w-lg text-base leading-8 text-slate-500">آزمون‌های کوتاه و جذاب برای سنجش واژگان و گرامر آلمانی. پیشرفتت را ببین و با ریتم خودت جلو برو.</p>
             <div className="mt-8 flex flex-wrap gap-4"><button onClick={() => void startQuiz("Mixed")} disabled={quizLoading} className="rounded-2xl bg-cyan-600 px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-cyan-200 disabled:opacity-60">{quizLoading ? "در حال آماده‌سازی..." : "شروع آزمون رایگان ←"}</button><button onClick={() => token ? void loadProgress(token) : openAuth("login")} className="rounded-2xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-bold text-slate-700">مشاهده‌ی پیشرفت</button></div>
-            <div className="mt-10 flex items-center gap-7 text-sm text-slate-500"><div><span className="block text-2xl font-black text-[#172033]">۱۲</span>سؤال آماده</div><div className="h-9 w-px bg-slate-200" /><div><span className="block text-2xl font-black text-[#172033]">A1.1</span>سطح فعلی</div></div>
+            <div className="mt-10 flex items-center gap-7 text-sm text-slate-500"><div><span className="block text-2xl font-black text-[#172033]">{selectedLesson ? "۴" : "—"}</span>سؤال آماده</div><div className="h-9 w-px bg-slate-200" /><div><span className="block text-2xl font-black text-[#172033]">A1.1</span>سطح فعلی</div></div>
           </div>
           <div className="relative mx-auto w-full max-w-md"><div className="absolute -inset-6 rounded-[3rem] bg-gradient-to-br from-cyan-100 via-white to-violet-100 blur-2xl" /><div className="relative rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-2xl shadow-slate-200/80 backdrop-blur">
             <div className="flex items-center justify-between"><div><p className="text-xs text-slate-400">پیشرفت تو</p><p className="mt-1 text-2xl font-black">{progress ? `${Math.round(progress.averageScore)}٪` : "—"}</p></div><div className="grid h-12 w-12 place-items-center rounded-2xl bg-cyan-50 text-xl">↗</div></div>
             <div className="mt-6 flex h-32 items-end justify-between gap-2">{[34, 54, 42, 76, 61, 88, progress ? Math.max(8, Math.round(progress.averageScore)) : 18].map((height, index) => <div key={index} className="flex flex-1 flex-col items-center gap-2"><div className={`w-full rounded-t-lg ${index === 6 ? "bg-cyan-500" : "bg-cyan-100"}`} style={{ height: `${height}%` }} /><span className="text-[10px] text-slate-400">{["ش", "ی", "د", "س", "چ", "پ", "ج"][index]}</span></div>)}</div>
-            <div className="mt-5 rounded-2xl bg-slate-50 p-4"><div className="flex items-center justify-between text-xs"><span className="font-bold text-slate-700">Lektion 1</span><span className="font-bold text-cyan-600">{progressLoading ? "در حال بارگذاری" : progress ? `${progress.attemptsCount} آزمون` : "هنوز شروع نشده"}</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-cyan-500 transition-all" style={{ width: `${progress?.averageScore ?? 0}%` }} /></div></div>
+            <div className="mt-5 rounded-2xl bg-slate-50 p-4"><div className="flex items-center justify-between text-xs"><span className="font-bold text-slate-700">Lektion {selectedLesson?.number ?? 1}</span><span className="font-bold text-cyan-600">{progressLoading ? "در حال بارگذاری" : progress ? `${progress.attemptsCount} آزمون` : "هنوز شروع نشده"}</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-cyan-500 transition-all" style={{ width: `${progress?.averageScore ?? 0}%` }} /></div></div>
           </div></div>
         </section>
 
@@ -347,7 +389,13 @@ export default function Home() {
           </div>)}</div>}
         </section>}
 
-        <section className="mt-20 pb-12"><div className="mb-7 flex items-end justify-between"><div><p className="text-sm font-bold text-cyan-600">انتخاب کن و شروع کن</p><h2 className="mt-2 text-2xl font-black">نوع آزمون را انتخاب کن</h2></div><span className="text-sm text-slate-400">۳ حالت آزمون</span></div>
+        <section className="mt-16 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-bold text-cyan-600">اول درس را انتخاب کن</p><h2 className="mt-2 text-2xl font-black text-[#172033]">آزمون کدام درس؟</h2></div><span className="text-sm text-slate-400">{lessonsLoading ? "در حال دریافت درس‌ها..." : `${lessons.length} درس آماده`}</span></div>
+          {lessonsError && <p className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600">{lessonsError}</p>}
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{lessons.map((lesson) => <button key={lesson.id} onClick={() => setSelectedLessonId(lesson.id)} className={`rounded-2xl border p-4 text-right transition ${selectedLessonId === lesson.id ? "border-cyan-500 bg-cyan-50 shadow-sm" : "border-slate-200 bg-slate-50 hover:border-cyan-300"}`}><div className="flex items-center justify-between gap-3"><span className="text-xs font-black text-cyan-700">Lektion {lesson.number}</span>{selectedLessonId === lesson.id && <span className="text-xs font-black text-cyan-600">انتخاب‌شده ✓</span>}</div><p className="mt-2 text-sm font-bold text-slate-800" dir="ltr">{lesson.title}</p></button>)}</div>
+        </section>
+
+        <section className="mt-12 pb-12"><div className="mb-7 flex items-end justify-between"><div><p className="text-sm font-bold text-cyan-600">انتخاب کن و شروع کن</p><h2 className="mt-2 text-2xl font-black">نوع آزمون را انتخاب کن</h2></div><span className="text-sm text-slate-400">۳ حالت آزمون · درس {selectedLesson?.number ?? 1}</span></div>
           <div className="grid gap-5 md:grid-cols-3">{quizModes.map((mode) => <button key={mode.category} onClick={() => void startQuiz(mode.category)} disabled={quizLoading} className="group text-right disabled:cursor-wait"><div className="h-full rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"><div className={`grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br ${mode.color} text-xl font-black text-white shadow-lg`}>{mode.icon}</div><div className="mt-5 flex items-center gap-2"><h3 className="text-lg font-black">{mode.title}</h3><span className="text-xs text-slate-400">{mode.subtitle}</span></div><p className="mt-3 text-sm leading-7 text-slate-500">{mode.description}</p><div className="mt-6 text-sm font-bold text-cyan-600">شروع کن ←</div></div></button>)}</div>
         </section>
       </div>
