@@ -50,6 +50,11 @@ type Lesson = {
   number: number;
   title: string;
 };
+type BookOption = {
+  key: string;
+  name: string;
+  level: string;
+};
 type AttemptResult = {
   totalQuestions: number;
   correctAnswers: number;
@@ -115,6 +120,7 @@ export default function Home() {
   const [progressLoading, setProgressLoading] = useState(false);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [selectedLessonId, setSelectedLessonId] = useState(defaultLessonId);
+  const [selectedBookKey, setSelectedBookKey] = useState("Menschen|A1.1");
   const [lessonsLoading, setLessonsLoading] = useState(false);
   const [lessonsError, setLessonsError] = useState("");
   const [history, setHistory] = useState<AttemptHistoryItem[]>([]);
@@ -261,11 +267,12 @@ export default function Home() {
         })
         .then((result) => {
           setLessons(result);
-          setSelectedLessonId((current) =>
-            result.length > 0 && result.some((lesson) => lesson.id === current)
-              ? current
-              : result[0]?.id ?? current,
-          );
+          const initialLesson =
+            result.find((lesson) => lesson.id === defaultLessonId) ?? result[0];
+          if (initialLesson) {
+            setSelectedLessonId(initialLesson.id);
+            setSelectedBookKey(`${initialLesson.book}|${initialLesson.level}`);
+          }
         })
         .catch((error: unknown) => {
           setLessonsError(
@@ -346,6 +353,17 @@ export default function Home() {
 
   const activeQuestion = quizQuestions[quizIndex];
   const selectedLesson = lessons.find((lesson) => lesson.id === selectedLessonId);
+  const bookOptions: BookOption[] = Array.from(
+    new Map(
+      lessons.map((lesson) => [
+        `${lesson.book}|${lesson.level}`,
+        { key: `${lesson.book}|${lesson.level}`, name: lesson.book, level: lesson.level },
+      ]),
+    ).values(),
+  );
+  const bookLessons = lessons.filter(
+    (lesson) => `${lesson.book}|${lesson.level}` === selectedBookKey,
+  );
 
   return (
     <main className="min-h-screen overflow-hidden">
@@ -363,11 +381,11 @@ export default function Home() {
 
         <section className="relative mt-14 grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
           <div className="relative z-10">
-            <span className="inline-flex rounded-full bg-cyan-50 px-4 py-2 text-xs font-bold text-cyan-700">Menschen · A1.1 · Lektion {selectedLesson?.number ?? 1}</span>
+            <span className="inline-flex rounded-full bg-cyan-50 px-4 py-2 text-xs font-bold text-cyan-700">{selectedLesson?.book ?? "Menschen"} · {selectedLesson?.level ?? "A1.1"} · Lektion {selectedLesson?.number ?? 1}</span>
             <h1 className="mt-6 max-w-xl text-4xl font-black leading-[1.2] tracking-tight text-[#172033] sm:text-6xl">هر روز کمی بهتر،<span className="block text-cyan-600">یک سؤال در هر لحظه.</span></h1>
             <p className="mt-6 max-w-lg text-base leading-8 text-slate-500">آزمون‌های کوتاه و جذاب برای سنجش واژگان و گرامر آلمانی. پیشرفتت را ببین و با ریتم خودت جلو برو.</p>
             <div className="mt-8 flex flex-wrap gap-4"><button onClick={() => void startQuiz("Mixed")} disabled={quizLoading} className="rounded-2xl bg-cyan-600 px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-cyan-200 disabled:opacity-60">{quizLoading ? "در حال آماده‌سازی..." : "شروع آزمون رایگان ←"}</button><button onClick={() => token ? void loadProgress(token) : openAuth("login")} className="rounded-2xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-bold text-slate-700">مشاهده‌ی پیشرفت</button></div>
-            <div className="mt-10 flex items-center gap-7 text-sm text-slate-500"><div><span className="block text-2xl font-black text-[#172033]">{selectedLesson ? "۱۰" : "—"}</span>سؤال آماده</div><div className="h-9 w-px bg-slate-200" /><div><span className="block text-2xl font-black text-[#172033]">A1.1</span>سطح فعلی</div></div>
+            <div className="mt-10 flex items-center gap-7 text-sm text-slate-500"><div><span className="block text-2xl font-black text-[#172033]">{selectedLesson ? "۲۰" : "—"}</span>سؤال آماده</div><div className="h-9 w-px bg-slate-200" /><div><span className="block text-2xl font-black text-[#172033]">{selectedLesson?.level ?? "A1.1"}</span>سطح فعلی</div></div>
           </div>
           <div className="relative mx-auto w-full max-w-md"><div className="absolute -inset-6 rounded-[3rem] bg-gradient-to-br from-cyan-100 via-white to-violet-100 blur-2xl" /><div className="relative rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-2xl shadow-slate-200/80 backdrop-blur">
             <div className="flex items-center justify-between"><div><p className="text-xs text-slate-400">پیشرفت تو</p><p className="mt-1 text-2xl font-black">{progress ? `${Math.round(progress.averageScore)}٪` : "—"}</p></div><div className="grid h-12 w-12 place-items-center rounded-2xl bg-cyan-50 text-xl">↗</div></div>
@@ -390,9 +408,41 @@ export default function Home() {
         </section>}
 
         <section className="mt-16 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-bold text-cyan-600">اول درس را انتخاب کن</p><h2 className="mt-2 text-2xl font-black text-[#172033]">آزمون کدام درس؟</h2></div><span className="text-sm text-slate-400">{lessonsLoading ? "در حال دریافت درس‌ها..." : `${lessons.length} درس آماده`}</span></div>
+          <div className="mb-8">
+            <p className="text-sm font-bold text-cyan-600">کتاب را انتخاب کن</p>
+            <h2 className="mt-2 text-2xl font-black text-[#172033]">اول کتاب و بعد درس را انتخاب کن</h2>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {bookOptions.map((book) => (
+                <button
+                  key={book.key}
+                  onClick={() => {
+                    setSelectedBookKey(book.key);
+                    const firstLesson = lessons.find(
+                      (lesson) => `${lesson.book}|${lesson.level}` === book.key,
+                    );
+                    if (firstLesson) setSelectedLessonId(firstLesson.id);
+                  }}
+                  className={`rounded-2xl border p-4 text-right transition ${
+                    selectedBookKey === book.key
+                      ? "border-cyan-500 bg-cyan-50 shadow-sm"
+                      : "border-slate-200 bg-slate-50 hover:border-cyan-300"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-xs font-black text-cyan-700">{book.level}</span>
+                    {selectedBookKey === book.key && (
+                      <span className="text-xs font-black text-cyan-600">انتخاب‌شده ✓</span>
+                    )}
+                  </div>
+                  <p className="mt-2 text-lg font-black text-slate-800" dir="ltr">{book.name}</p>
+                  <p className="mt-1 text-xs text-slate-500" dir="ltr">A1.1 lesson-by-lesson quizzes</p>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-bold text-cyan-600">اول درس را انتخاب کن</p><h2 className="mt-2 text-2xl font-black text-[#172033]">آزمون کدام درس؟</h2></div><span className="text-sm text-slate-400">{lessonsLoading ? "در حال دریافت درس‌ها..." : `${bookLessons.length} درس آماده`}</span></div>
           {lessonsError && <p className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600">{lessonsError}</p>}
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{lessons.map((lesson) => <button key={lesson.id} onClick={() => setSelectedLessonId(lesson.id)} className={`rounded-2xl border p-4 text-right transition ${selectedLessonId === lesson.id ? "border-cyan-500 bg-cyan-50 shadow-sm" : "border-slate-200 bg-slate-50 hover:border-cyan-300"}`}><div className="flex items-center justify-between gap-3"><span className="text-xs font-black text-cyan-700">Lektion {lesson.number}</span>{selectedLessonId === lesson.id && <span className="text-xs font-black text-cyan-600">انتخاب‌شده ✓</span>}</div><p className="mt-2 text-sm font-bold text-slate-800" dir="ltr">{lesson.title}</p></button>)}</div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{bookLessons.map((lesson) => <button key={lesson.id} onClick={() => setSelectedLessonId(lesson.id)} className={`rounded-2xl border p-4 text-right transition ${selectedLessonId === lesson.id ? "border-cyan-500 bg-cyan-50 shadow-sm" : "border-slate-200 bg-slate-50 hover:border-cyan-300"}`}><div className="flex items-center justify-between gap-3"><span className="text-xs font-black text-cyan-700">Lektion {lesson.number}</span>{selectedLessonId === lesson.id && <span className="text-xs font-black text-cyan-600">انتخاب‌شده ✓</span>}</div><p className="mt-2 text-sm font-bold text-slate-800" dir="ltr">{lesson.title}</p></button>)}</div>
         </section>
 
         <section className="mt-12 pb-12"><div className="mb-7 flex items-end justify-between"><div><p className="text-sm font-bold text-cyan-600">انتخاب کن و شروع کن</p><h2 className="mt-2 text-2xl font-black">نوع آزمون را انتخاب کن</h2></div><span className="text-sm text-slate-400">۳ حالت آزمون · درس {selectedLesson?.number ?? 1}</span></div>

@@ -6,6 +6,13 @@ public sealed record QuizContentLesson(
     Lesson Lesson,
     IReadOnlyList<QuizQuestion> Questions);
 
+public sealed record QuizContentBook(
+    Guid Id,
+    string Name,
+    string Level,
+    string Publisher,
+    IReadOnlyList<QuizContentLesson> Lessons);
+
 public static class QuizContentCatalog
 {
     public static IReadOnlyList<QuizContentLesson> Lessons { get; } =
@@ -275,13 +282,32 @@ public static class QuizContentCatalog
             G("Der Zug ___ morgen früh ab.", ["fährt", "fahren", "fährst"], "fährt", "Bei der Zug lautet fahren: fährt.")),
     ];
 
+    public static IReadOnlyList<QuizContentBook> Books { get; } =
+    [
+        new(
+            Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+            "Menschen",
+            "A1.1",
+            "Hueber",
+            Lessons),
+        new(
+            Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+            "Starten wir!",
+            "A1.1",
+            "Hueber",
+            StartenWirQuizContentCatalog.Lessons)
+    ];
+
+    public static IReadOnlyList<QuizContentLesson> AllLessons { get; } =
+        Books.SelectMany(book => book.Lessons).ToList();
+
     public static IReadOnlyList<Lesson> GetLessons() =>
-        Lessons.Select(content => content.Lesson).ToList();
+        AllLessons.Select(content => content.Lesson).ToList();
 
     public static IReadOnlyList<QuizQuestion> GetQuestions(
         Guid lessonId,
         QuizCategory? category = null) =>
-        Lessons
+        AllLessons
             .Where(content => content.Lesson.Id == lessonId)
             .SelectMany(content => content.Questions)
             .Where(question =>
