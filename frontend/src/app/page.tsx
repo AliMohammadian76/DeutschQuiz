@@ -78,6 +78,21 @@ type ProgressSummary = {
   totalQuestionsAnswered: number;
   totalCorrectAnswers: number;
   totalTimeMs: number;
+  lessons: ProgressLessonSummary[];
+};
+type ProgressLessonSummary = {
+  lessonId: string;
+  book: string;
+  level: string;
+  lessonNumber: number;
+  title: string;
+  attemptsCount: number;
+  averageScore: number;
+  bestScore: number;
+  totalQuestionsAnswered: number;
+  totalCorrectAnswers: number;
+  totalTimeMs: number;
+  lastAttemptAtUtc: string | null;
 };
 type AttemptHistoryItem = {
   attemptId: string;
@@ -364,6 +379,9 @@ export default function Home() {
   const bookLessons = lessons.filter(
     (lesson) => `${lesson.book}|${lesson.level}` === selectedBookKey,
   );
+  const selectedBookProgress = progress?.lessons.filter(
+    (lesson) => `${lesson.book}|${lesson.level}` === selectedBookKey,
+  ) ?? [];
 
   return (
     <main className="min-h-screen overflow-hidden">
@@ -395,6 +413,43 @@ export default function Home() {
         </section>
 
         {progress && <section className="mt-12 grid gap-4 sm:grid-cols-4">{[["میانگین نمره", `${Math.round(progress.averageScore)}٪`], ["بهترین نمره", `${progress.bestScore}٪`], ["پاسخ درست", `${progress.totalCorrectAnswers} از ${progress.totalQuestionsAnswered}`], ["زمان پاسخ", `${Math.round(progress.totalTimeMs / 1000)} ثانیه`]].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><p className="text-xs text-slate-400">{label}</p><p className="mt-2 text-xl font-black text-[#172033]">{value}</p></div>)}</section>}
+
+        {token && progress && <section className="mt-12 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-sm font-bold text-cyan-600">نمای کلی پیشرفت</p>
+              <h2 className="mt-2 text-2xl font-black text-[#172033]">پیشرفت درس‌های {selectedLesson?.book ?? "کتاب انتخاب‌شده"}</h2>
+            </div>
+            <span className="text-xs text-slate-400">{selectedBookProgress.length} درس دارای سابقه</span>
+          </div>
+          {selectedBookProgress.length === 0 ? (
+            <p className="mt-6 rounded-2xl bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">
+              هنوز در این کتاب آزمونی ثبت نکرده‌ای. یک آزمون شروع کن تا پیشرفت هر درس اینجا نمایش داده شود.
+            </p>
+          ) : (
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {selectedBookProgress.map((lesson) => (
+                <div key={lesson.lessonId} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <span className="text-xs font-black text-cyan-700">Lektion {lesson.lessonNumber}</span>
+                      <p className="mt-1 text-sm font-bold text-slate-800" dir="ltr">{lesson.title}</p>
+                    </div>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-cyan-700">{Math.round(lesson.averageScore)}٪</span>
+                  </div>
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
+                    <div className="h-full rounded-full bg-cyan-500" style={{ width: `${lesson.averageScore}%` }} />
+                  </div>
+                  <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-slate-500">
+                    <div><span className="block font-black text-slate-700">{lesson.attemptsCount}</span>آزمون</div>
+                    <div><span className="block font-black text-slate-700">{lesson.bestScore}٪</span>بهترین</div>
+                    <div><span className="block font-black text-slate-700">{Math.round(lesson.totalTimeMs / 1000)}ث</span>زمان</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>}
 
         {token && <section className="mt-12 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7">
           <div className="flex items-center justify-between gap-4">

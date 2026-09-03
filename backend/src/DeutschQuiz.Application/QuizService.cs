@@ -102,6 +102,10 @@ public sealed record ProgressLessonSummary(
     string Title,
     int AttemptsCount,
     decimal AverageScore,
+    int BestScore,
+    int TotalQuestionsAnswered,
+    int TotalCorrectAnswers,
+    int TotalTimeMs,
     DateTime? LastAttemptAtUtc);
 
 public sealed record AttemptHistoryItem(

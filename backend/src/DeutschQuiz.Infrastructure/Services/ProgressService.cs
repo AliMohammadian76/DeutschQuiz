@@ -146,6 +146,10 @@ public sealed class ProgressService(QuizDbContext db) : IProgressService
                 group.Key.Title,
                 group.Count(),
                 Math.Round(group.Average(attempt => attempt.Score ?? 0m), 2),
+                (int)Math.Round(group.Max(attempt => attempt.Score ?? 0m)),
+                group.Sum(attempt => attempt.TotalQuestions),
+                group.Sum(attempt => attempt.CorrectAnswers),
+                group.Sum(attempt => attempt.TotalTimeMs),
                 group.Max(attempt => attempt.CompletedAtUtc)))
             .OrderBy(summary => summary.Book)
             .ThenBy(summary => summary.Level)

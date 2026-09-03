@@ -51,7 +51,7 @@ APIهای اولیه:
 - `POST /api/auth/register` — ساخت حساب با `email`، `password` و `displayName`
 - `POST /api/auth/login` — دریافت JWT
 - `POST /api/attempts` — ثبت نتیجه‌ی آزمون و زمان پاسخ هر سؤال (نیازمند Bearer token)
-- `GET /api/progress/summary` — خلاصه‌ی نمره، بهترین نتیجه، زمان و پیشرفت درس‌ها
+- `GET /api/progress/summary` — خلاصه‌ی نمره، بهترین نتیجه، زمان و پیشرفت درس‌ها؛ برای هر درس میانگین، بهترین نمره، تعداد پاسخ درست و زمان کل هم برمی‌گردد
 - `GET /api/progress/history?limit=10` — آخرین تلاش‌های کاربر با نوع آزمون، نمره، زمان و تاریخ
 
 پاسخ `POST /api/attempts` علاوه بر نمره و زمان کل، آرایه‌ی `answers` را برمی‌گرداند.
