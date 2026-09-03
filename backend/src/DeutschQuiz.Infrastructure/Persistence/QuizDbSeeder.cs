@@ -47,38 +47,56 @@ public static class QuizDbSeeder
                 db.Lessons.Add(lesson);
             }
 
-            var existingQuestionIds = await db.Questions
+            var existingQuestions = await db.Questions
+                .Include(question => question.Options)
                 .Where(question => question.LessonId == lesson.Id)
-                .Select(question => question.Id)
-                .ToListAsync(cancellationToken);
+                .ToDictionaryAsync(question => question.Id, cancellationToken);
 
-            foreach (var question in content.Questions.Where(question =>
-                         !existingQuestionIds.Contains(question.Id)))
+            foreach (var question in content.Questions)
             {
-                var entity = new QuizQuestionEntity
+                if (!existingQuestions.TryGetValue(question.Id, out var entity))
                 {
-                    Id = question.Id,
-                    LessonId = lesson.Id,
-                    Category = question.Category,
-                    Type = question.Type,
-                    Prompt = question.Prompt,
-                    CorrectAnswer = question.CorrectAnswer,
-                    Explanation = question.Explanation,
-                    Lesson = lesson
-                };
+                    entity = new QuizQuestionEntity
+                    {
+                        Id = question.Id,
+                        LessonId = lesson.Id,
+                        Lesson = lesson
+                    };
+                    db.Questions.Add(entity);
+                }
+
+                entity.Category = question.Category;
+                entity.Type = question.Type;
+                entity.Prompt = question.Prompt;
+                entity.CorrectAnswer = question.CorrectAnswer;
+                entity.Explanation = question.Explanation;
 
                 for (var index = 0; index < question.Options.Count; index++)
                 {
-                    entity.Options.Add(new QuestionOptionEntity
+                    var option = entity.Options
+                        .SingleOrDefault(item => item.SortOrder == index);
+                    if (option is null)
                     {
-                        Id = Guid.NewGuid(),
-                        SortOrder = index,
-                        Text = question.Options[index],
-                        Question = entity
-                    });
+                        entity.Options.Add(new QuestionOptionEntity
+                        {
+                            Id = Guid.NewGuid(),
+                            SortOrder = index,
+                            Text = question.Options[index],
+                            Question = entity
+                        });
+                    }
+                    else
+                    {
+                        option.Text = question.Options[index];
+                    }
                 }
 
-                db.Questions.Add(entity);
+                foreach (var extraOption in entity.Options
+                             .Where(option => option.SortOrder >= question.Options.Count)
+                             .ToList())
+                {
+                    db.QuestionOptions.Remove(extraOption);
+                }
             }
         }
 
