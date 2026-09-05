@@ -38,7 +38,7 @@ public sealed class EfQuizService(QuizDbContext db) : IQuizService
             query = query.Where(question => question.Category == category);
         }
 
-        return await query
+        var questions = await query
             .OrderBy(question => question.Id)
             .Select(question => new QuizQuestion(
                 question.Id,
@@ -53,5 +53,9 @@ public sealed class EfQuizService(QuizDbContext db) : IQuizService
                 question.CorrectAnswer,
                 question.Explanation))
             .ToListAsync(cancellationToken);
+
+        return questions
+            .Select(OptionOrder.WithShuffledOptions)
+            .ToList();
     }
 }

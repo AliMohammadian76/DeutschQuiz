@@ -22,8 +22,14 @@ public sealed class InMemoryQuizService : IQuizService
     public Task<IReadOnlyList<QuizQuestion>> GetQuestionsAsync(
         Guid lessonId,
         QuizCategory? category = null,
-        CancellationToken cancellationToken = default) =>
-        Task.FromResult(QuizContentCatalog.GetQuestions(lessonId, category));
+        CancellationToken cancellationToken = default)
+    {
+        var questions = QuizContentCatalog.GetQuestions(lessonId, category)
+            .Select(OptionOrder.WithShuffledOptions)
+            .ToList();
+
+        return Task.FromResult<IReadOnlyList<QuizQuestion>>(questions);
+    }
 }
 
 public sealed record RegisterUserRequest(
