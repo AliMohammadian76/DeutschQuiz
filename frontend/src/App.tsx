@@ -49,9 +49,8 @@ type Lesson = {
   title: string;
 };
 type BookOption = {
-  key: string;
   name: string;
-  level: string;
+  levels: string[];
 };
 type AttemptResult = {
   totalQuestions: number;
@@ -133,7 +132,8 @@ export default function App() {
   const [progressLoading, setProgressLoading] = useState(false);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [selectedLessonId, setSelectedLessonId] = useState(defaultLessonId);
-  const [selectedBookKey, setSelectedBookKey] = useState("Menschen|A1.1");
+  const [selectedBook, setSelectedBook] = useState("Menschen");
+  const [selectedLevel, setSelectedLevel] = useState("A1.1");
   const [lessonsLoading, setLessonsLoading] = useState(false);
   const [lessonsError, setLessonsError] = useState("");
   const [history, setHistory] = useState<AttemptHistoryItem[]>([]);
@@ -284,7 +284,8 @@ export default function App() {
             result.find((lesson) => lesson.id === defaultLessonId) ?? result[0];
           if (initialLesson) {
             setSelectedLessonId(initialLesson.id);
-            setSelectedBookKey(`${initialLesson.book}|${initialLesson.level}`);
+            setSelectedBook(initialLesson.book);
+            setSelectedLevel(initialLesson.level);
           }
         })
         .catch((error: unknown) => {
@@ -367,19 +368,45 @@ export default function App() {
   const activeQuestion = quizQuestions[quizIndex];
   const selectedLesson = lessons.find((lesson) => lesson.id === selectedLessonId);
   const bookOptions: BookOption[] = Array.from(
-    new Map(
-      lessons.map((lesson) => [
-        `${lesson.book}|${lesson.level}`,
-        { key: `${lesson.book}|${lesson.level}`, name: lesson.book, level: lesson.level },
-      ]),
-    ).values(),
-  );
+    lessons.reduce((books, lesson) => {
+      const levels = books.get(lesson.book) ?? [];
+      if (!levels.includes(lesson.level)) levels.push(lesson.level);
+      books.set(lesson.book, levels);
+      return books;
+    }, new Map<string, string[]>()),
+  ).map(([name, levels]) => ({
+    name,
+    levels: [...levels].sort(),
+  }));
+  const selectedBookLevels =
+    bookOptions.find((book) => book.name === selectedBook)?.levels ?? [];
   const bookLessons = lessons.filter(
-    (lesson) => `${lesson.book}|${lesson.level}` === selectedBookKey,
+    (lesson) =>
+      lesson.book === selectedBook && lesson.level === selectedLevel,
   );
   const selectedBookProgress = progress?.lessons.filter(
-    (lesson) => `${lesson.book}|${lesson.level}` === selectedBookKey,
+    (lesson) =>
+      lesson.book === selectedBook && lesson.level === selectedLevel,
   ) ?? [];
+
+  function selectBook(bookName: string) {
+    setSelectedBook(bookName);
+    const levels = bookOptions.find((book) => book.name === bookName)?.levels ?? [];
+    const nextLevel = levels.includes(selectedLevel) ? selectedLevel : levels[0] ?? selectedLevel;
+    setSelectedLevel(nextLevel);
+    const firstLesson = lessons.find(
+      (lesson) => lesson.book === bookName && lesson.level === nextLevel,
+    );
+    if (firstLesson) setSelectedLessonId(firstLesson.id);
+  }
+
+  function selectLevel(level: string) {
+    setSelectedLevel(level);
+    const firstLesson = lessons.find(
+      (lesson) => lesson.book === selectedBook && lesson.level === level,
+    );
+    if (firstLesson) setSelectedLessonId(firstLesson.id);
+  }
 
   return (
     <main className="min-h-screen overflow-hidden">
@@ -416,7 +443,7 @@ export default function App() {
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-sm font-bold text-cyan-600">نمای کلی پیشرفت</p>
-              <h2 className="mt-2 text-2xl font-black text-[#172033]">پیشرفت درس‌های {selectedLesson?.book ?? "کتاب انتخاب‌شده"}</h2>
+              <h2 className="mt-2 text-2xl font-black text-[#172033]">پیشرفت درس‌های {selectedBook} {selectedLevel}</h2>
             </div>
             <span className="text-xs text-slate-400">{selectedBookProgress.length} درس دارای سابقه</span>
           </div>
@@ -467,33 +494,52 @@ export default function App() {
             <div className="mt-5 grid gap-3 sm:grid-cols-2">
               {bookOptions.map((book) => (
                 <button
-                  key={book.key}
-                  onClick={() => {
-                    setSelectedBookKey(book.key);
-                    const firstLesson = lessons.find(
-                      (lesson) => `${lesson.book}|${lesson.level}` === book.key,
-                    );
-                    if (firstLesson) setSelectedLessonId(firstLesson.id);
-                  }}
+                  key={book.name}
+                  onClick={() => selectBook(book.name)}
                   className={`rounded-2xl border p-4 text-right transition ${
-                    selectedBookKey === book.key
+                    selectedBook === book.name
                       ? "border-cyan-500 bg-cyan-50 shadow-sm"
                       : "border-slate-200 bg-slate-50 hover:border-cyan-300"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-black text-cyan-700">{book.level}</span>
-                    {selectedBookKey === book.key && (
+                    <span className="text-xs font-black text-cyan-700">
+                      {book.levels.join(" · ")}
+                    </span>
+                    {selectedBook === book.name && (
                       <span className="text-xs font-black text-cyan-600">انتخاب‌شده ✓</span>
                     )}
                   </div>
                   <p className="mt-2 text-lg font-black text-slate-800" dir="ltr">{book.name}</p>
-                  <p className="mt-1 text-xs text-slate-500" dir="ltr">A1.1 lesson-by-lesson quizzes</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {book.levels.length} سطح · آزمون درس‌به‌درس
+                  </p>
                 </button>
               ))}
             </div>
+            {selectedBookLevels.length > 1 && (
+              <div className="mt-5">
+                <p className="mb-3 text-xs font-bold text-slate-500">سطح را انتخاب کن</p>
+                <div className="flex flex-wrap gap-2">
+                  {selectedBookLevels.map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => selectLevel(level)}
+                      className={`rounded-full px-4 py-2 text-xs font-black transition ${
+                        selectedLevel === level
+                          ? "bg-cyan-600 text-white"
+                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                      }`}
+                      dir="ltr"
+                    >
+                      {level}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-bold text-cyan-600">اول درس را انتخاب کن</p><h2 className="mt-2 text-2xl font-black text-[#172033]">آزمون کدام درس؟</h2></div><span className="text-sm text-slate-400">{lessonsLoading ? "در حال دریافت درس‌ها..." : `${bookLessons.length} درس آماده`}</span></div>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-bold text-cyan-600">اول درس را انتخاب کن</p><h2 className="mt-2 text-2xl font-black text-[#172033]">آزمون کدام درس؟</h2></div><span className="text-sm text-slate-400">{lessonsLoading ? "در حال دریافت درس‌ها..." : `${bookLessons.length} درس · ${selectedBook} ${selectedLevel}`}</span></div>
           {lessonsError && <p className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600">{lessonsError}</p>}
           <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{bookLessons.map((lesson) => <button key={lesson.id} onClick={() => setSelectedLessonId(lesson.id)} className={`rounded-2xl border p-4 text-right transition ${selectedLessonId === lesson.id ? "border-cyan-500 bg-cyan-50 shadow-sm" : "border-slate-200 bg-slate-50 hover:border-cyan-300"}`}><div className="flex items-center justify-between gap-3"><span className="text-xs font-black text-cyan-700">Lektion {lesson.number}</span>{selectedLessonId === lesson.id && <span className="text-xs font-black text-cyan-600">انتخاب‌شده ✓</span>}</div><p className="mt-2 text-sm font-bold text-slate-800" dir="ltr">{lesson.title}</p></button>)}</div>
         </section>
