@@ -7,6 +7,12 @@
 - `backend/` — API مستقل با ASP.NET Core و Clean Architecture
 - `frontend/` — رابط کاربری مستقل با Next.js، TypeScript و Tailwind CSS
 
+## کار تیمی و شاخه‌ها
+
+- شاخه‌ی پیش‌فرض روزمره: `develop`
+- شاخه‌ی نسخهٔ نهایی / انتشار: `master`
+- جزئیات workflow، PRها و دعوت همکار: [CONTRIBUTING.md](CONTRIBUTING.md)
+
 ## وضعیت فعلی
 
 - آزمون‌های درس‌به‌درس برای ۱۲ درس هر دو کتاب `Menschen A1.1` و `Starten wir! A1.1`
