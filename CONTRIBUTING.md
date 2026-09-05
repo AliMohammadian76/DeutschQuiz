@@ -1,48 +1,42 @@
 # Contributing to DeutschQuiz
 
-This repo uses **GitHub Flow** (best fit for a small team): one long-lived branch, short-lived feature branches, and pull requests.
-
 ## Branches
 
 | Branch | Role |
 |--------|------|
-| `master` | **Default.** Always deployable. All work merges here via PR. |
-| `frontend/*`, `backend/*`, `feature/*` | Short-lived work branches. Delete after merge. |
-
-There is no `develop` branch. Do not keep a second long-lived integration branch.
+| `develop` | **Default.** Day-to-day work, previews, and integration. Push / open PRs here. |
+| `master` | **Launch / publish only.** Stable release. Do not push feature work here. |
+| `frontend/*`, `backend/*`, `feature/*` | Optional short-lived work branches. |
 
 ```text
-master  →  frontend/short-description  →  PR  →  master
+feature branch (optional)  →  develop  →  PR when ready to launch  →  master
 ```
-
-**Releases:** tag `master` when you publish (for example `v1.0.0`). You do not need a separate release branch for this project.
 
 ## Getting started
 
 ```bash
 git clone https://github.com/AliMohammadian76/DeutschQuiz.git
 cd DeutschQuiz
-git checkout master
-git pull origin master
+git checkout develop
+git pull origin develop
 ```
 
 Run the app using [README.md](README.md) (`backend/` and `frontend/`).
 
 ## How to work
 
-1. Update `master` and create a branch:
+1. Work on `develop` (or a branch created from `develop`):
 
    ```bash
-   git checkout master
-   git pull origin master
-   git checkout -b frontend/short-description
+   git checkout develop
+   git pull origin develop
+   git checkout -b frontend/short-description   # optional
    ```
 
-2. Push the branch and open a **pull request into `master`**.
+2. Push to `develop` (or open a PR into `develop`).
 
-3. After merge, delete the feature branch and start the next task from an updated `master`.
-
-Direct pushes to `master` are blocked by branch protection; always use a PR.
+3. **Launch / publish:** when the app is ready to release, open a PR from `develop` → `master`.  
+   Direct pushes to `master` are blocked by branch protection.
 
 ## Who works where
 
@@ -58,5 +52,5 @@ GitHub → **Settings → Collaborators** → Add people → **Admin** (or Write
 Teammates should:
 
 1. Accept the invite
-2. Work on feature branches off `master`
-3. Open PRs into `master` (never push straight to `master`)
+2. Clone and use **`develop`** as the main branch
+3. Never push launch work straight to `master` — use a PR `develop` → `master`
