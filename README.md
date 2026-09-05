@@ -5,7 +5,7 @@
 ## ساختار
 
 - `backend/` — API مستقل با ASP.NET Core و Clean Architecture
-- `frontend/` — رابط کاربری مستقل با Next.js، TypeScript و Tailwind CSS
+- `frontend/` — رابط کاربری مستقل با React (Vite)، TypeScript و Tailwind CSS
 
 ## کار تیمی و شاخه‌ها
 
@@ -132,7 +132,7 @@ npm install
 npm run dev
 ```
 
-فرانت‌اند روی `http://localhost:3000` اجرا می‌شود.
-در صورت نیاز، مقدار `NEXT_PUBLIC_API_BASE_URL` را مطابق `frontend/.env.example` تنظیم کن.
+فرانت‌اند روی `http://localhost:5173` اجرا می‌شود.
+در صورت نیاز، مقدار `VITE_API_BASE_URL` را مطابق `frontend/.env.example` تنظیم کن.
 
 محتوای سؤال‌های نمونه باید原创 و مستقل از متن و تمرین‌های دارای حق نشر کتاب طراحی شود.

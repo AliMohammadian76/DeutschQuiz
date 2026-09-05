@@ -1,9 +1,7 @@
-"use client";
-
 import { FormEvent, useEffect, useState } from "react";
 
 const apiBaseUrl =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5083/api";
+  import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5083/api";
 
 const quizModes = [
   {
@@ -120,7 +118,7 @@ async function getError(response: Response) {
   }
 }
 
-export default function Home() {
+export default function App() {
   const [language, setLanguage] = useState("fa");
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authOpen, setAuthOpen] = useState(false);
