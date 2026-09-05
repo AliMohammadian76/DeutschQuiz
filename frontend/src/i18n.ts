@@ -25,6 +25,12 @@ type Messages = {
   statTime: string;
   secondsShort: (n: number) => string;
   progressHeading: (book: string, level: string) => string;
+  progressChartHeading: string;
+  progressChartEyebrow: string;
+  chartScore: string;
+  chartAverage: string;
+  chartBest: string;
+  chartEmpty: string;
   lessonCount: (n: number) => string;
   noProgressInLevel: string;
   attemptsCount: (n: number) => string;
@@ -93,6 +99,12 @@ const fa: Messages = {
   statTime: "زمان",
   secondsShort: (n) => `${n}ث`,
   progressHeading: (book, level) => `پیشرفت · ${book} ${level}`,
+  progressChartHeading: "نمودار پیشرفت کاربر",
+  progressChartEyebrow: "User Progress Chart",
+  chartScore: "نمره",
+  chartAverage: "میانگین",
+  chartBest: "بهترین",
+  chartEmpty: "هنوز داده‌ای برای رسم نمودار نیست.",
   lessonCount: (n) => `${n} درس`,
   noProgressInLevel: "هنوز در این سطح آزمونی ثبت نکرده‌ای.",
   attemptsCount: (n) => `${n} آزمون`,
@@ -171,6 +183,12 @@ const en: Messages = {
   statTime: "Time",
   secondsShort: (n) => `${n}s`,
   progressHeading: (book, level) => `Progress · ${book} ${level}`,
+  progressChartHeading: "User Progress Chart",
+  progressChartEyebrow: "Fortschritt",
+  chartScore: "Score",
+  chartAverage: "Average",
+  chartBest: "Best",
+  chartEmpty: "No data yet to draw the chart.",
   lessonCount: (n) => `${n} lessons`,
   noProgressInLevel: "No attempts recorded for this level yet.",
   attemptsCount: (n) => `${n} attempts`,

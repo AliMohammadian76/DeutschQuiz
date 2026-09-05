@@ -7,6 +7,7 @@ import {
   getMessages,
   localeFor,
 } from "./i18n";
+import { UserProgressChart } from "./UserProgressChart";
 
 const apiBaseUrl =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5083/api";
@@ -185,7 +186,7 @@ export default function App() {
   async function loadHistory(accessToken: string) {
     setHistoryLoading(true);
     try {
-      const response = await fetch(`${apiBaseUrl}/progress/history?limit=10`, {
+      const response = await fetch(`${apiBaseUrl}/progress/history?limit=40`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (response.ok) setHistory(await response.json());
@@ -555,6 +556,46 @@ export default function App() {
                 <p className="font-display mt-2 text-2xl font-bold">{value}</p>
               </div>
             ))}
+          </section>
+        )}
+
+        {token && progress && (
+          <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-de-red">
+                  {t.progressChartEyebrow}
+                </p>
+                <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                  {t.progressChartHeading}
+                </h2>
+              </div>
+              <span className="rounded-full bg-de-gold/40 px-3 py-1 text-xs font-bold text-de-black">
+                {selectedBook} {selectedLevel}
+              </span>
+            </div>
+            <div className="mt-6">
+              <UserProgressChart
+                attempts={history.filter(
+                  (attempt) =>
+                    attempt.book === selectedBook &&
+                    attempt.level === selectedLevel,
+                )}
+                lessons={selectedBookProgress.map((lesson) => ({
+                  lessonId: lesson.lessonId,
+                  lessonNumber: lesson.lessonNumber,
+                  title: lesson.title,
+                  averageScore: lesson.averageScore,
+                  bestScore: lesson.bestScore,
+                }))}
+                scoreLabel={t.chartScore}
+                averageLabel={t.chartAverage}
+                bestLabel={t.chartBest}
+                emptyLabel={t.chartEmpty}
+                locale={localeFor(uiLanguage)}
+                rtl={uiLanguage === "fa"}
+              />
+            </div>
           </section>
         )}
 
