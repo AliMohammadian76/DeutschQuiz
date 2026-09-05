@@ -8,25 +8,22 @@ const quizModes = [
     category: "Vocabulary",
     title: "واژگان",
     subtitle: "Wortschatz",
-    description: "کلمات کلیدی درس اول را مرور کن.",
-    icon: "Aa",
-    color: "from-amber-400 to-orange-500",
+    description: "کلمات کلیدی درس را مرور کن.",
+    accent: "bg-de-black text-white",
   },
   {
     category: "Grammar",
     title: "گرامر",
     subtitle: "Grammatik",
     description: "ساختارهای پایه و جمله‌سازی را بسنج.",
-    icon: "文",
-    color: "from-violet-500 to-indigo-600",
+    accent: "bg-de-red text-white",
   },
   {
     category: "Mixed",
     title: "آزمون جامع",
     subtitle: "Komplett",
     description: "ترکیبی از واژگان و گرامر.",
-    icon: "✦",
-    color: "from-cyan-400 to-blue-600",
+    accent: "bg-de-gold text-de-black",
   },
 ] as const;
 
@@ -409,187 +406,588 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden">
-      <div className="mx-auto max-w-7xl px-5 py-6 sm:px-8 lg:px-10">
-        <header className="flex items-center justify-between">
+    <main className="min-h-screen">
+      <div className="de-flag h-1.5 w-full animate-flag" aria-hidden>
+        <span /><span /><span />
+      </div>
+
+      <div className="mx-auto max-w-6xl px-5 py-6 sm:px-8">
+        <header className="animate-rise flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[#172033] text-lg font-bold text-white shadow-lg shadow-slate-300">D</div>
-            <div><p className="text-lg font-bold tracking-tight">DeutschQuiz</p><p className="text-xs text-slate-500">تمرین هوشمند آلمانی</p></div>
+            <div className="de-flag h-10 w-7 shrink-0 rounded-sm shadow-sm" aria-hidden>
+              <span /><span /><span />
+            </div>
+            <div>
+              <p className="font-display text-xl font-extrabold tracking-tight text-de-black">
+                DeutschQuiz
+              </p>
+              <p className="text-xs text-muted">Deutsch lernen · Schritt für Schritt</p>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => setLanguage(language === "fa" ? "en" : "fa")} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-600 transition hover:border-slate-300">{language === "fa" ? "English" : "فارسی"}</button>
-            {token ? <div className="flex items-center gap-2"><span className="hidden text-sm font-bold text-slate-600 sm:inline">{userName}</span><button onClick={logout} className="rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700">خروج</button></div> : <button onClick={() => openAuth("login")} className="rounded-full bg-[#172033] px-5 py-2.5 text-sm font-semibold text-white">ورود / ثبت‌نام</button>}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setLanguage(language === "fa" ? "en" : "fa")}
+              className="border border-line bg-surface px-3 py-2 text-xs font-semibold text-muted transition hover:border-de-black"
+            >
+              {language === "fa" ? "EN" : "FA"}
+            </button>
+            {token ? (
+              <div className="flex items-center gap-2">
+                <span className="hidden text-sm font-semibold text-muted sm:inline">
+                  {userName}
+                </span>
+                <button
+                  onClick={logout}
+                  className="border border-line bg-surface px-4 py-2 text-sm font-semibold text-de-black"
+                >
+                  خروج
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => openAuth("login")}
+                className="bg-de-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-de-red"
+              >
+                ورود
+              </button>
+            )}
           </div>
         </header>
 
-        <section className="relative mt-14 grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="relative z-10">
-            <span className="inline-flex rounded-full bg-cyan-50 px-4 py-2 text-xs font-bold text-cyan-700">{selectedLesson?.book ?? "Menschen"} · {selectedLesson?.level ?? "A1.1"} · Lektion {selectedLesson?.number ?? 1}</span>
-            <h1 className="mt-6 max-w-xl text-4xl font-black leading-[1.2] tracking-tight text-[#172033] sm:text-6xl">هر روز کمی بهتر،<span className="block text-cyan-600">یک سؤال در هر لحظه.</span></h1>
-            <p className="mt-6 max-w-lg text-base leading-8 text-slate-500">آزمون‌های کوتاه و جذاب برای سنجش واژگان و گرامر آلمانی. پیشرفتت را ببین و با ریتم خودت جلو برو.</p>
-            <div className="mt-8 flex flex-wrap gap-4"><button onClick={() => void startQuiz("Mixed")} disabled={quizLoading} className="rounded-2xl bg-cyan-600 px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-cyan-200 disabled:opacity-60">{quizLoading ? "در حال آماده‌سازی..." : "شروع آزمون رایگان ←"}</button><button onClick={() => token ? void loadProgress(token) : openAuth("login")} className="rounded-2xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-bold text-slate-700">مشاهده‌ی پیشرفت</button></div>
-            <div className="mt-10 flex items-center gap-7 text-sm text-slate-500"><div><span className="block text-2xl font-black text-[#172033]">{selectedLesson ? "۲۰" : "—"}</span>سؤال آماده</div><div className="h-9 w-px bg-slate-200" /><div><span className="block text-2xl font-black text-[#172033]">{selectedLesson?.level ?? "A1.1"}</span>سطح فعلی</div></div>
+        <section className="mt-12 grid items-stretch gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="animate-rise relative z-10 self-center" style={{ animationDelay: "80ms" }}>
+            <p className="font-display text-5xl font-extrabold leading-none tracking-tight text-de-black sm:text-7xl">
+              DeutschQuiz
+            </p>
+            <h1 className="mt-5 max-w-xl text-2xl font-bold leading-10 text-de-black sm:text-3xl">
+              آلمانی را با آزمون‌های کوتاه و دقیق تمرین کن.
+            </h1>
+            <p className="mt-4 max-w-md text-sm leading-7 text-muted">
+              {selectedLesson?.book ?? "Menschen"} · {selectedLesson?.level ?? "A1.1"} ·
+              Lektion {selectedLesson?.number ?? 1}
+            </p>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <button
+                onClick={() => void startQuiz("Mixed")}
+                disabled={quizLoading}
+                className="bg-de-red px-6 py-3.5 text-sm font-bold text-white transition hover:brightness-95 disabled:opacity-60"
+              >
+                {quizLoading ? "آماده‌سازی..." : "شروع آزمون"}
+              </button>
+              <button
+                onClick={() => (token ? void loadProgress(token) : openAuth("login"))}
+                className="border border-de-black bg-transparent px-6 py-3.5 text-sm font-bold text-de-black transition hover:bg-de-black hover:text-white"
+              >
+                پیشرفت
+              </button>
+            </div>
           </div>
-          <div className="relative mx-auto w-full max-w-md"><div className="absolute -inset-6 rounded-[3rem] bg-gradient-to-br from-cyan-100 via-white to-violet-100 blur-2xl" /><div className="relative rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-2xl shadow-slate-200/80 backdrop-blur">
-            <div className="flex items-center justify-between"><div><p className="text-xs text-slate-400">پیشرفت تو</p><p className="mt-1 text-2xl font-black">{progress ? `${Math.round(progress.averageScore)}٪` : "—"}</p></div><div className="grid h-12 w-12 place-items-center rounded-2xl bg-cyan-50 text-xl">↗</div></div>
-            <div className="mt-6 flex h-32 items-end justify-between gap-2">{[34, 54, 42, 76, 61, 88, progress ? Math.max(8, Math.round(progress.averageScore)) : 18].map((height, index) => <div key={index} className="flex flex-1 flex-col items-center gap-2"><div className={`w-full rounded-t-lg ${index === 6 ? "bg-cyan-500" : "bg-cyan-100"}`} style={{ height: `${height}%` }} /><span className="text-[10px] text-slate-400">{["ش", "ی", "د", "س", "چ", "پ", "ج"][index]}</span></div>)}</div>
-            <div className="mt-5 rounded-2xl bg-slate-50 p-4"><div className="flex items-center justify-between text-xs"><span className="font-bold text-slate-700">Lektion {selectedLesson?.number ?? 1}</span><span className="font-bold text-cyan-600">{progressLoading ? "در حال بارگذاری" : progress ? `${progress.attemptsCount} آزمون` : "هنوز شروع نشده"}</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-200"><div className="h-full rounded-full bg-cyan-500 transition-all" style={{ width: `${progress?.averageScore ?? 0}%` }} /></div></div>
-          </div></div>
+
+          <div
+            className="animate-flag relative min-h-[280px] overflow-hidden lg:min-h-[360px]"
+            style={{ animationDelay: "200ms" }}
+          >
+            <div className="de-flag absolute inset-0" aria-hidden>
+              <span /><span /><span />
+            </div>
+            <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/50 to-transparent p-6 text-white">
+              <p className="font-display text-sm font-bold uppercase tracking-[0.2em]">
+                Bundesrepublik
+              </p>
+              <p className="mt-2 text-lg font-bold">
+                {selectedLesson ? "۲۰ سؤال آماده" : "درس را انتخاب کن"}
+              </p>
+              <p className="mt-1 text-sm text-white/80">
+                سطح {selectedLesson?.level ?? "A1.1"}
+                {progress ? ` · میانگین ${Math.round(progress.averageScore)}٪` : ""}
+              </p>
+            </div>
+          </div>
         </section>
 
-        {progress && <section className="mt-12 grid gap-4 sm:grid-cols-4">{[["میانگین نمره", `${Math.round(progress.averageScore)}٪`], ["بهترین نمره", `${progress.bestScore}٪`], ["پاسخ درست", `${progress.totalCorrectAnswers} از ${progress.totalQuestionsAnswered}`], ["زمان پاسخ", `${Math.round(progress.totalTimeMs / 1000)} ثانیه`]].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"><p className="text-xs text-slate-400">{label}</p><p className="mt-2 text-xl font-black text-[#172033]">{value}</p></div>)}</section>}
+        {progress && (
+          <section className="mt-14 grid gap-px overflow-hidden border border-line bg-line sm:grid-cols-4">
+            {(
+              [
+                ["میانگین", `${Math.round(progress.averageScore)}٪`],
+                ["بهترین", `${progress.bestScore}٪`],
+                ["درست", `${progress.totalCorrectAnswers}/${progress.totalQuestionsAnswered}`],
+                ["زمان", `${Math.round(progress.totalTimeMs / 1000)}ث`],
+              ] as const
+            ).map(([label, value]) => (
+              <div key={label} className="bg-surface px-4 py-5">
+                <p className="text-xs text-muted">{label}</p>
+                <p className="font-display mt-2 text-2xl font-bold text-de-black">{value}</p>
+              </div>
+            ))}
+          </section>
+        )}
 
-        {token && progress && <section className="mt-12 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-bold text-cyan-600">نمای کلی پیشرفت</p>
-              <h2 className="mt-2 text-2xl font-black text-[#172033]">پیشرفت درس‌های {selectedBook} {selectedLevel}</h2>
+        {token && progress && (
+          <section className="mt-14 border-t border-line pt-10">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-de-red">Fortschritt</p>
+                <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                  پیشرفت · {selectedBook} {selectedLevel}
+                </h2>
+              </div>
+              <span className="text-xs text-muted">{selectedBookProgress.length} درس</span>
             </div>
-            <span className="text-xs text-slate-400">{selectedBookProgress.length} درس دارای سابقه</span>
-          </div>
-          {selectedBookProgress.length === 0 ? (
-            <p className="mt-6 rounded-2xl bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">
-              هنوز در این کتاب آزمونی ثبت نکرده‌ای. یک آزمون شروع کن تا پیشرفت هر درس اینجا نمایش داده شود.
-            </p>
-          ) : (
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              {selectedBookProgress.map((lesson) => (
-                <div key={lesson.lessonId} className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <span className="text-xs font-black text-cyan-700">Lektion {lesson.lessonNumber}</span>
-                      <p className="mt-1 text-sm font-bold text-slate-800" dir="ltr">{lesson.title}</p>
+            {selectedBookProgress.length === 0 ? (
+              <p className="mt-6 border border-dashed border-line bg-surface px-4 py-6 text-center text-sm text-muted">
+                هنوز در این سطح آزمونی ثبت نکرده‌ای.
+              </p>
+            ) : (
+              <div className="mt-6 grid gap-3 md:grid-cols-2">
+                {selectedBookProgress.map((lesson) => (
+                  <div key={lesson.lessonId} className="border border-line bg-surface p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <span className="text-xs font-bold text-de-red">
+                          Lektion {lesson.lessonNumber}
+                        </span>
+                        <p className="mt-1 text-sm font-bold text-de-black" dir="ltr">
+                          {lesson.title}
+                        </p>
+                      </div>
+                      <span className="bg-de-gold px-2 py-1 text-xs font-bold text-de-black">
+                        {Math.round(lesson.averageScore)}٪
+                      </span>
                     </div>
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-cyan-700">{Math.round(lesson.averageScore)}٪</span>
+                    <div className="mt-4 h-1 overflow-hidden bg-line">
+                      <div
+                        className="h-full bg-de-red"
+                        style={{ width: `${lesson.averageScore}%` }}
+                      />
+                    </div>
+                    <div className="mt-3 flex gap-4 text-xs text-muted">
+                      <span>{lesson.attemptsCount} آزمون</span>
+                      <span>بهترین {lesson.bestScore}٪</span>
+                      <span>{Math.round(lesson.totalTimeMs / 1000)}ث</span>
+                    </div>
                   </div>
-                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-200">
-                    <div className="h-full rounded-full bg-cyan-500" style={{ width: `${lesson.averageScore}%` }} />
-                  </div>
-                  <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-slate-500">
-                    <div><span className="block font-black text-slate-700">{lesson.attemptsCount}</span>آزمون</div>
-                    <div><span className="block font-black text-slate-700">{lesson.bestScore}٪</span>بهترین</div>
-                    <div><span className="block font-black text-slate-700">{Math.round(lesson.totalTimeMs / 1000)}ث</span>زمان</div>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {token && (
+          <section className="mt-14 border-t border-line pt-10">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-de-red">Verlauf</p>
+                <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                  تاریخچه‌ی آزمون‌ها
+                </h2>
+              </div>
+              <button
+                onClick={() => void loadHistory(token)}
+                disabled={historyLoading}
+                className="border border-line px-3 py-2 text-xs font-semibold text-muted disabled:opacity-50"
+              >
+                {historyLoading ? "..." : "به‌روزرسانی"}
+              </button>
             </div>
-          )}
-        </section>}
-
-        {token && <section className="mt-12 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7">
-          <div className="flex items-center justify-between gap-4">
-            <div><p className="text-sm font-bold text-cyan-600">تلاش‌های اخیر</p><h2 className="mt-2 text-2xl font-black text-[#172033]">تاریخچه‌ی آزمون‌ها</h2></div>
-            <button onClick={() => void loadHistory(token)} disabled={historyLoading} className="rounded-xl border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600 disabled:opacity-50">{historyLoading ? "در حال بارگذاری..." : "به‌روزرسانی"}</button>
-          </div>
-          {history.length === 0 ? <p className="mt-6 rounded-2xl bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">{historyLoading ? "در حال دریافت تاریخچه..." : "هنوز آزمونی ثبت نکرده‌ای."}</p> : <div className="mt-6 space-y-3">{history.map((attempt) => <div key={attempt.attemptId} className="flex flex-col gap-3 rounded-2xl bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div><div className="flex items-center gap-2"><span className="text-sm font-black text-slate-800">{attempt.category === "Vocabulary" ? "واژگان" : attempt.category === "Grammar" ? "گرامر" : "جامع"}</span><span className="text-xs text-slate-400">· {attempt.book} {attempt.level} · Lektion {attempt.lessonNumber}</span></div><p className="mt-1 text-xs text-slate-500">{attempt.completedAtUtc ? new Date(attempt.completedAtUtc).toLocaleString("fa-IR", { dateStyle: "medium", timeStyle: "short" }) : "تاریخ نامشخص"}</p></div>
-            <div className="flex items-center gap-5 text-left"><div><span className="block text-lg font-black text-cyan-700">{Math.round(attempt.score)}٪</span><span className="text-[11px] text-slate-400">{attempt.correctAnswers} از {attempt.totalQuestions} درست</span></div><div><span className="block text-sm font-bold text-slate-700">{Math.round(attempt.totalTimeMs / 1000)} ثانیه</span><span className="text-[11px] text-slate-400">زمان پاسخ</span></div></div>
-          </div>)}</div>}
-        </section>}
-
-        <section className="mt-16 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm sm:p-7">
-          <div className="mb-8">
-            <p className="text-sm font-bold text-cyan-600">کتاب را انتخاب کن</p>
-            <h2 className="mt-2 text-2xl font-black text-[#172033]">اول کتاب و بعد درس را انتخاب کن</h2>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              {bookOptions.map((book) => (
-                <button
-                  key={book.name}
-                  onClick={() => selectBook(book.name)}
-                  className={`rounded-2xl border p-4 text-right transition ${
-                    selectedBook === book.name
-                      ? "border-cyan-500 bg-cyan-50 shadow-sm"
-                      : "border-slate-200 bg-slate-50 hover:border-cyan-300"
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs font-black text-cyan-700">
-                      {book.levels.join(" · ")}
-                    </span>
-                    {selectedBook === book.name && (
-                      <span className="text-xs font-black text-cyan-600">انتخاب‌شده ✓</span>
-                    )}
+            {history.length === 0 ? (
+              <p className="mt-6 border border-dashed border-line bg-surface px-4 py-6 text-center text-sm text-muted">
+                {historyLoading ? "در حال دریافت..." : "هنوز آزمونی ثبت نکرده‌ای."}
+              </p>
+            ) : (
+              <div className="mt-6 divide-y divide-line border border-line bg-surface">
+                {history.map((attempt) => (
+                  <div
+                    key={attempt.attemptId}
+                    className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-bold text-de-black">
+                          {attempt.category === "Vocabulary"
+                            ? "واژگان"
+                            : attempt.category === "Grammar"
+                              ? "گرامر"
+                              : "جامع"}
+                        </span>
+                        <span className="text-xs text-muted">
+                          {attempt.book} {attempt.level} · Lektion {attempt.lessonNumber}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-muted">
+                        {attempt.completedAtUtc
+                          ? new Date(attempt.completedAtUtc).toLocaleString("fa-IR", {
+                              dateStyle: "medium",
+                              timeStyle: "short",
+                            })
+                          : "تاریخ نامشخص"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-5 text-left">
+                      <div>
+                        <span className="block font-display text-lg font-bold text-de-red">
+                          {Math.round(attempt.score)}٪
+                        </span>
+                        <span className="text-[11px] text-muted">
+                          {attempt.correctAnswers}/{attempt.totalQuestions}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="block text-sm font-bold text-de-black">
+                          {Math.round(attempt.totalTimeMs / 1000)}ث
+                        </span>
+                        <span className="text-[11px] text-muted">زمان</span>
+                      </div>
+                    </div>
                   </div>
-                  <p className="mt-2 text-lg font-black text-slate-800" dir="ltr">{book.name}</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {book.levels.length} سطح · آزمون درس‌به‌درس
-                  </p>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        <section className="mt-16 border-t border-line pt-10">
+          <p className="text-xs font-bold uppercase tracking-wider text-de-red">Lehrwerk</p>
+          <h2 className="mt-2 font-display text-2xl font-bold text-de-black">انتخاب کتاب</h2>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {bookOptions.map((book) => (
+              <button
+                key={book.name}
+                onClick={() => selectBook(book.name)}
+                className={`border p-5 text-right transition ${
+                  selectedBook === book.name
+                    ? "border-de-black bg-de-black text-white"
+                    : "border-line bg-surface text-de-black hover:border-de-red"
+                }`}
+              >
+                <p className="font-display text-xl font-bold" dir="ltr">
+                  {book.name}
+                </p>
+                <p
+                  className={`mt-2 text-xs ${selectedBook === book.name ? "text-white/70" : "text-muted"}`}
+                >
+                  {book.levels.join(" · ")}
+                </p>
+              </button>
+            ))}
+          </div>
+          {selectedBookLevels.length > 1 && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {selectedBookLevels.map((level) => (
+                <button
+                  key={level}
+                  onClick={() => selectLevel(level)}
+                  className={`px-4 py-2 text-xs font-bold transition ${
+                    selectedLevel === level
+                      ? "bg-de-gold text-de-black"
+                      : "border border-line bg-surface text-muted hover:border-de-black"
+                  }`}
+                  dir="ltr"
+                >
+                  {level}
                 </button>
               ))}
             </div>
-            {selectedBookLevels.length > 1 && (
-              <div className="mt-5">
-                <p className="mb-3 text-xs font-bold text-slate-500">سطح را انتخاب کن</p>
-                <div className="flex flex-wrap gap-2">
-                  {selectedBookLevels.map((level) => (
-                    <button
-                      key={level}
-                      onClick={() => selectLevel(level)}
-                      className={`rounded-full px-4 py-2 text-xs font-black transition ${
-                        selectedLevel === level
-                          ? "bg-cyan-600 text-white"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                      }`}
-                      dir="ltr"
-                    >
-                      {level}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+          )}
+
+          <div className="mt-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-de-red">Lektion</p>
+              <h2 className="mt-2 font-display text-2xl font-bold text-de-black">انتخاب درس</h2>
+            </div>
+            <span className="text-xs text-muted">
+              {lessonsLoading
+                ? "در حال دریافت..."
+                : `${bookLessons.length} درس · ${selectedBook} ${selectedLevel}`}
+            </span>
           </div>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-sm font-bold text-cyan-600">اول درس را انتخاب کن</p><h2 className="mt-2 text-2xl font-black text-[#172033]">آزمون کدام درس؟</h2></div><span className="text-sm text-slate-400">{lessonsLoading ? "در حال دریافت درس‌ها..." : `${bookLessons.length} درس · ${selectedBook} ${selectedLevel}`}</span></div>
-          {lessonsError && <p className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-600">{lessonsError}</p>}
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{bookLessons.map((lesson) => <button key={lesson.id} onClick={() => setSelectedLessonId(lesson.id)} className={`rounded-2xl border p-4 text-right transition ${selectedLessonId === lesson.id ? "border-cyan-500 bg-cyan-50 shadow-sm" : "border-slate-200 bg-slate-50 hover:border-cyan-300"}`}><div className="flex items-center justify-between gap-3"><span className="text-xs font-black text-cyan-700">Lektion {lesson.number}</span>{selectedLessonId === lesson.id && <span className="text-xs font-black text-cyan-600">انتخاب‌شده ✓</span>}</div><p className="mt-2 text-sm font-bold text-slate-800" dir="ltr">{lesson.title}</p></button>)}</div>
+          {lessonsError && (
+            <p className="mt-4 border border-de-red/30 bg-de-red/5 px-3 py-2 text-sm font-semibold text-de-red">
+              {lessonsError}
+            </p>
+          )}
+          <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {bookLessons.map((lesson) => (
+              <button
+                key={lesson.id}
+                onClick={() => setSelectedLessonId(lesson.id)}
+                className={`border p-4 text-right transition ${
+                  selectedLessonId === lesson.id
+                    ? "border-de-red bg-de-red/5"
+                    : "border-line bg-surface hover:border-de-black"
+                }`}
+              >
+                <span className="text-xs font-bold text-de-red">Lektion {lesson.number}</span>
+                <p className="mt-2 text-sm font-bold text-de-black" dir="ltr">
+                  {lesson.title}
+                </p>
+              </button>
+            ))}
+          </div>
         </section>
 
-        <section className="mt-12 pb-12"><div className="mb-7 flex items-end justify-between"><div><p className="text-sm font-bold text-cyan-600">انتخاب کن و شروع کن</p><h2 className="mt-2 text-2xl font-black">نوع آزمون را انتخاب کن</h2></div><span className="text-sm text-slate-400">۳ حالت آزمون · درس {selectedLesson?.number ?? 1}</span></div>
-          <div className="grid gap-5 md:grid-cols-3">{quizModes.map((mode) => <button key={mode.category} onClick={() => void startQuiz(mode.category)} disabled={quizLoading} className="group text-right disabled:cursor-wait"><div className="h-full rounded-3xl border border-slate-100 bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"><div className={`grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br ${mode.color} text-xl font-black text-white shadow-lg`}>{mode.icon}</div><div className="mt-5 flex items-center gap-2"><h3 className="text-lg font-black">{mode.title}</h3><span className="text-xs text-slate-400">{mode.subtitle}</span></div><p className="mt-3 text-sm leading-7 text-slate-500">{mode.description}</p><div className="mt-6 text-sm font-bold text-cyan-600">شروع کن ←</div></div></button>)}</div>
+        <section className="mt-14 border-t border-line pb-16 pt-10">
+          <div className="mb-6 flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider text-de-red">Quiz</p>
+              <h2 className="mt-2 font-display text-2xl font-bold text-de-black">نوع آزمون</h2>
+            </div>
+            <span className="text-xs text-muted">Lektion {selectedLesson?.number ?? 1}</span>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {quizModes.map((mode) => (
+              <button
+                key={mode.category}
+                onClick={() => void startQuiz(mode.category)}
+                disabled={quizLoading}
+                className="group border border-line bg-surface p-5 text-right transition hover:border-de-black disabled:cursor-wait"
+              >
+                <span
+                  className={`inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${mode.accent}`}
+                >
+                  {mode.subtitle}
+                </span>
+                <h3 className="mt-4 text-lg font-bold text-de-black">{mode.title}</h3>
+                <p className="mt-2 text-sm leading-7 text-muted">{mode.description}</p>
+                <div className="mt-5 text-sm font-bold text-de-red group-hover:underline">
+                  شروع
+                </div>
+              </button>
+            ))}
+          </div>
         </section>
       </div>
 
-      {quizOpen && activeQuestion && <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/40 px-5 py-6 backdrop-blur-sm" onMouseDown={() => !quizSubmitting && setQuizOpen(false)}>
-        <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl sm:p-8" onMouseDown={(event) => event.stopPropagation()}>
-          {quizResult ? <div className="text-center">
-            <div className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-emerald-50 text-3xl text-emerald-600">✓</div>
-            <p className="mt-5 text-sm font-bold text-cyan-600">آزمون تمام شد</p>
-            <h2 className="mt-2 text-3xl font-black text-[#172033]">{Math.round(quizResult.score)}٪</h2>
-            <p className="mt-3 text-sm text-slate-500">{quizResult.correctAnswers} پاسخ درست از {quizResult.totalQuestions} سؤال · {Math.round(quizResult.totalTimeMs / 1000)} ثانیه</p>
-            <div className="mt-7 space-y-3 text-right">
-              {quizResult.answers.map((answer, index) => <div key={answer.questionId} className={`rounded-2xl border p-4 ${answer.isCorrect ? "border-emerald-100 bg-emerald-50/70" : "border-rose-100 bg-rose-50/70"}`}>
-                <div className="flex items-start gap-3"><span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full text-xs font-black ${answer.isCorrect ? "bg-emerald-500 text-white" : "bg-rose-500 text-white"}`}>{answer.isCorrect ? "✓" : "×"}</span><div className="min-w-0 flex-1"><p className="text-sm font-bold text-slate-800" dir="ltr">{index + 1}. {answer.prompt}</p><p className="mt-2 text-xs text-slate-600" dir="ltr">پاسخ تو: <span className="font-bold">{answer.selectedAnswer}</span>{!answer.isCorrect && <> · پاسخ درست: <span className="font-bold text-emerald-700">{answer.correctAnswer}</span></>}</p>{answer.explanation && <p className="mt-2 text-xs leading-6 text-slate-500">{answer.explanation}</p>}</div></div>
-              </div>)}
-            </div>
-            <button onClick={() => setQuizOpen(false)} className="mt-7 rounded-2xl bg-cyan-600 px-6 py-3 text-sm font-bold text-white">بازگشت به صفحه اصلی</button>
-          </div> : <>
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-bold text-cyan-600">{quizCategory === "Vocabulary" ? "Wortschatz" : quizCategory === "Grammar" ? "Grammatik" : "Komplett"}</p>
-                <h2 className="mt-2 text-2xl font-black text-[#172033]">سؤال {quizIndex + 1} از {quizQuestions.length}</h2>
+      {quizOpen && activeQuestion && (
+        <div
+          className="fixed inset-0 z-40 grid place-items-center bg-de-black/50 px-5 py-6 backdrop-blur-sm"
+          onMouseDown={() => !quizSubmitting && setQuizOpen(false)}
+        >
+          <div
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto border border-line bg-surface p-6 shadow-2xl sm:p-8"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            {quizResult ? (
+              <div className="text-center">
+                <div className="de-flag mx-auto h-16 w-12" aria-hidden>
+                  <span /><span /><span />
+                </div>
+                <p className="mt-5 text-xs font-bold uppercase tracking-wider text-de-red">
+                  Ergebnis
+                </p>
+                <h2 className="font-display mt-2 text-4xl font-extrabold text-de-black">
+                  {Math.round(quizResult.score)}٪
+                </h2>
+                <p className="mt-3 text-sm text-muted">
+                  {quizResult.correctAnswers} از {quizResult.totalQuestions} درست ·{" "}
+                  {Math.round(quizResult.totalTimeMs / 1000)} ثانیه
+                </p>
+                <div className="mt-7 space-y-2 text-right">
+                  {quizResult.answers.map((answer, index) => (
+                    <div
+                      key={answer.questionId}
+                      className={`border p-4 ${
+                        answer.isCorrect
+                          ? "border-de-gold/60 bg-de-gold/10"
+                          : "border-de-red/30 bg-de-red/5"
+                      }`}
+                    >
+                      <p className="text-sm font-bold text-de-black" dir="ltr">
+                        {index + 1}. {answer.prompt}
+                      </p>
+                      <p className="mt-2 text-xs text-muted" dir="ltr">
+                        پاسخ تو: <span className="font-bold">{answer.selectedAnswer}</span>
+                        {!answer.isCorrect && (
+                          <>
+                            {" "}
+                            · درست:{" "}
+                            <span className="font-bold text-de-black">{answer.correctAnswer}</span>
+                          </>
+                        )}
+                      </p>
+                      {answer.explanation && (
+                        <p className="mt-2 text-xs leading-6 text-muted">{answer.explanation}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setQuizOpen(false)}
+                  className="mt-7 bg-de-black px-6 py-3 text-sm font-bold text-white"
+                >
+                  بازگشت
+                </button>
               </div>
-              <button onClick={() => setQuizOpen(false)} className="text-xl text-slate-400">×</button>
-            </div>
-            <div className="mt-5 h-2 overflow-hidden rounded-full bg-slate-100"><div className="h-full rounded-full bg-cyan-500 transition-all" style={{ width: `${((quizIndex + 1) / quizQuestions.length) * 100}%` }} /></div>
-            <div className="mt-9 rounded-3xl bg-slate-50 p-5 sm:p-7">
-              <p className="text-center text-xl font-bold leading-9 text-[#172033]" dir="ltr">{activeQuestion.prompt}</p>
-              <div className="mt-7 grid gap-3">
-                {activeQuestion.options.map((option) => {
-                  const selected = quizAnswers[activeQuestion.id] === option;
-                  return <button key={option} onClick={() => selectAnswer(option)} className={`rounded-2xl border px-4 py-3.5 text-center text-base font-semibold transition ${selected ? "border-cyan-500 bg-cyan-50 text-cyan-700" : "border-slate-200 bg-white text-slate-700 hover:border-cyan-300"}`} dir="ltr">{option}</button>;
-                })}
-              </div>
-            </div>
-            {quizError && <p className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-center text-xs font-semibold text-rose-600">{quizError}</p>}
-            <div className="mt-6 flex items-center justify-between gap-3">
-              <button onClick={() => setQuizOpen(false)} className="rounded-2xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600">انصراف</button>
-              {quizIndex < quizQuestions.length - 1 ? <button onClick={nextQuestion} disabled={!quizAnswers[activeQuestion.id]} className="rounded-2xl bg-cyan-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-40">سؤال بعدی ←</button> : <button onClick={() => void submitQuiz()} disabled={!quizAnswers[activeQuestion.id] || quizSubmitting} className="rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-40">{quizSubmitting ? "در حال ثبت..." : "ثبت آزمون ✓"}</button>}
-            </div>
-          </>}
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-de-red">
+                      {quizCategory === "Vocabulary"
+                        ? "Wortschatz"
+                        : quizCategory === "Grammar"
+                          ? "Grammatik"
+                          : "Komplett"}
+                    </p>
+                    <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                      سؤال {quizIndex + 1} از {quizQuestions.length}
+                    </h2>
+                  </div>
+                  <button onClick={() => setQuizOpen(false)} className="text-xl text-muted">
+                    ×
+                  </button>
+                </div>
+                <div className="mt-5 h-1 overflow-hidden bg-line">
+                  <div
+                    className="h-full bg-de-red transition-all"
+                    style={{
+                      width: `${((quizIndex + 1) / quizQuestions.length) * 100}%`,
+                    }}
+                  />
+                </div>
+                <div className="mt-8 border border-line bg-background p-5 sm:p-7">
+                  <p
+                    className="text-center text-xl font-bold leading-9 text-de-black"
+                    dir="ltr"
+                  >
+                    {activeQuestion.prompt}
+                  </p>
+                  <div className="mt-7 grid gap-2">
+                    {activeQuestion.options.map((option) => {
+                      const selected = quizAnswers[activeQuestion.id] === option;
+                      return (
+                        <button
+                          key={option}
+                          onClick={() => selectAnswer(option)}
+                          className={`border px-4 py-3.5 text-center text-base font-semibold transition ${
+                            selected
+                              ? "border-de-black bg-de-black text-white"
+                              : "border-line bg-surface text-de-black hover:border-de-red"
+                          }`}
+                          dir="ltr"
+                        >
+                          {option}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                {quizError && (
+                  <p className="mt-4 border border-de-red/30 bg-de-red/5 px-3 py-2 text-center text-xs font-semibold text-de-red">
+                    {quizError}
+                  </p>
+                )}
+                <div className="mt-6 flex items-center justify-between gap-3">
+                  <button
+                    onClick={() => setQuizOpen(false)}
+                    className="border border-line px-4 py-3 text-sm font-semibold text-muted"
+                  >
+                    انصراف
+                  </button>
+                  {quizIndex < quizQuestions.length - 1 ? (
+                    <button
+                      onClick={nextQuestion}
+                      disabled={!quizAnswers[activeQuestion.id]}
+                      className="bg-de-red px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
+                    >
+                      بعدی
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => void submitQuiz()}
+                      disabled={!quizAnswers[activeQuestion.id] || quizSubmitting}
+                      className="bg-de-black px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
+                    >
+                      {quizSubmitting ? "ثبت..." : "ثبت آزمون"}
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      </div>}
+      )}
 
-      {authOpen && <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/35 px-5 backdrop-blur-sm" onMouseDown={() => setAuthOpen(false)}><div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl" onMouseDown={(event) => event.stopPropagation()}><div className="flex items-start justify-between"><div><p className="text-sm font-bold text-cyan-600">DeutschQuiz</p><h2 className="mt-2 text-2xl font-black">{authMode === "login" ? "خوش برگشتی" : "ساخت حساب کاربری"}</h2></div><button onClick={() => setAuthOpen(false)} className="text-xl text-slate-400">×</button></div><form onSubmit={submitAuth} className="mt-6 space-y-4">{authMode === "register" && <input required value={displayName} onChange={(event) => setDisplayName(event.target.value)} placeholder="نام نمایشی" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-cyan-500" />}<input required type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="ایمیل" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-cyan-500" /><input required minLength={8} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="رمز عبور (حداقل ۸ کاراکتر)" className="w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm outline-none focus:border-cyan-500" />{authError && <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-600">{authError}</p>}<button disabled={authLoading} className="w-full rounded-2xl bg-cyan-600 px-4 py-3.5 text-sm font-bold text-white disabled:opacity-60">{authLoading ? "در حال ارسال..." : authMode === "login" ? "ورود" : "ثبت‌نام"}</button></form><button onClick={() => { setAuthMode(authMode === "login" ? "register" : "login"); setAuthError(""); }} className="mt-4 w-full text-center text-xs font-semibold text-slate-500">{authMode === "login" ? "حساب نداری؟ ثبت‌نام کن" : "قبلاً حساب ساخته‌ای؟ وارد شو"}</button></div></div>}
+      {authOpen && (
+        <div
+          className="fixed inset-0 z-50 grid place-items-center bg-de-black/45 px-5 backdrop-blur-sm"
+          onMouseDown={() => setAuthOpen(false)}
+        >
+          <div
+            className="w-full max-w-md border border-line bg-surface p-6 shadow-2xl"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="de-flag mb-5 h-1.5 w-full" aria-hidden>
+              <span /><span /><span />
+            </div>
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="font-display text-sm font-bold text-de-black">DeutschQuiz</p>
+                <h2 className="mt-2 text-2xl font-bold text-de-black">
+                  {authMode === "login" ? "ورود" : "ثبت‌نام"}
+                </h2>
+              </div>
+              <button onClick={() => setAuthOpen(false)} className="text-xl text-muted">
+                ×
+              </button>
+            </div>
+            <form onSubmit={submitAuth} className="mt-6 space-y-3">
+              {authMode === "register" && (
+                <input
+                  required
+                  value={displayName}
+                  onChange={(event) => setDisplayName(event.target.value)}
+                  placeholder="نام نمایشی"
+                  className="w-full border border-line bg-background px-4 py-3 text-sm outline-none focus:border-de-black"
+                />
+              )}
+              <input
+                required
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="ایمیل"
+                className="w-full border border-line bg-background px-4 py-3 text-sm outline-none focus:border-de-black"
+              />
+              <input
+                required
+                minLength={8}
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="رمز عبور (حداقل ۸ کاراکتر)"
+                className="w-full border border-line bg-background px-4 py-3 text-sm outline-none focus:border-de-black"
+              />
+              {authError && (
+                <p className="border border-de-red/30 bg-de-red/5 px-3 py-2 text-xs font-semibold text-de-red">
+                  {authError}
+                </p>
+              )}
+              <button
+                disabled={authLoading}
+                className="w-full bg-de-red px-4 py-3.5 text-sm font-bold text-white disabled:opacity-60"
+              >
+                {authLoading
+                  ? "در حال ارسال..."
+                  : authMode === "login"
+                    ? "ورود"
+                    : "ثبت‌نام"}
+              </button>
+            </form>
+            <button
+              onClick={() => {
+                setAuthMode(authMode === "login" ? "register" : "login");
+                setAuthError("");
+              }}
+              className="mt-4 w-full text-center text-xs font-semibold text-muted"
+            >
+              {authMode === "login"
+                ? "حساب نداری؟ ثبت‌نام کن"
+                : "قبلاً حساب ساخته‌ای؟ وارد شو"}
+            </button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
