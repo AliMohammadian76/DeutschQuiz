@@ -498,46 +498,17 @@ export default function App() {
             <h1 className="mt-5 max-w-xl text-2xl font-bold leading-10 text-de-black sm:text-3xl">
               {t.heroHeadline}
             </h1>
-            <p className="mt-4 max-w-md rounded-2xl bg-white/70 px-3 py-2 text-sm leading-7 text-muted">
-              {selectedLesson?.book ?? "Menschen"} · {selectedLesson?.level ?? "A1.1"} ·
-              Lektion {selectedLesson?.number ?? 1}
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <button
-                onClick={() => void startQuiz("Mixed")}
-                disabled={quizLoading}
-                className="rounded-2xl bg-de-red px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-de-red/25 transition hover:brightness-95 disabled:opacity-60"
-              >
-                {quizLoading ? t.preparing : t.startQuiz}
-              </button>
-              <button
-                onClick={() => (token ? void loadProgress(token) : openAuth("login"))}
-                className="rounded-2xl border-2 border-de-black bg-white px-6 py-3.5 text-sm font-bold text-de-black transition hover:bg-de-black hover:text-white"
-              >
-                {t.progress}
-              </button>
-            </div>
           </div>
 
           <div
-            className="animate-flag relative min-h-[280px] overflow-hidden rounded-[2rem] shadow-xl shadow-de-black/15 lg:min-h-[360px]"
+            className="animate-flag relative flex min-h-[280px] items-center justify-center overflow-hidden rounded-[2rem] border border-line bg-gradient-to-br from-de-mist via-surface to-de-cream p-6 shadow-xl shadow-de-black/10 lg:min-h-[360px]"
             style={{ animationDelay: "200ms" }}
           >
-            <div className="de-flag absolute inset-0" aria-hidden>
-              <span /><span /><span />
-            </div>
-            <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/60 via-black/20 to-transparent p-6 text-white">
-              <p className="font-display text-sm font-bold uppercase tracking-[0.2em] text-de-gold">
-                Bundesrepublik
-              </p>
-              <p className="mt-2 text-lg font-bold">
-                {selectedLesson ? t.questionsReady : t.pickLesson}
-              </p>
-              <p className="mt-1 text-sm text-white/85">
-                {t.levelLabel(selectedLesson?.level ?? "A1.1")}
-                {progress ? t.averageWith(Math.round(progress.averageScore)) : ""}
-              </p>
-            </div>
+            <img
+              src="/germany-flag-map.png"
+              alt="Deutschland"
+              className="max-h-[300px] w-auto max-w-full object-contain drop-shadow-lg lg:max-h-[340px]"
+            />
           </div>
         </section>
 

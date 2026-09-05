@@ -97,7 +97,7 @@ const fa: Messages = {
   statBest: "بهترین",
   statCorrect: "درست",
   statTime: "زمان",
-  secondsShort: (n) => `${n}ث`,
+  secondsShort: (n) => `${n} ثانیه`,
   progressHeading: (book, level) => `پیشرفت · ${book} ${level}`,
   progressChartHeading: "نمودار پیشرفت کاربر",
   progressChartEyebrow: "User Progress Chart",
