@@ -1,37 +1,39 @@
 import { FormEvent, useEffect, useState } from "react";
+import {
+  ACTIVE_UI_LANGUAGE,
+  Language,
+  SHOW_LANGUAGE_SWITCHER,
+  dirFor,
+  getMessages,
+  localeFor,
+} from "./i18n";
 
 const apiBaseUrl =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5083/api";
 
-const quizModes = [
+const quizModeMeta = [
   {
     category: "Vocabulary",
-    title: "واژگان",
     subtitle: "Wortschatz",
-    description: "کلمات کلیدی درس را مرور کن.",
     accent: "bg-de-black text-white",
     card: "border-de-black/10 bg-gradient-to-br from-surface to-de-mist",
   },
   {
     category: "Grammar",
-    title: "گرامر",
     subtitle: "Grammatik",
-    description: "ساختارهای پایه و جمله‌سازی را بسنج.",
     accent: "bg-de-red text-white",
     card: "border-de-red/15 bg-gradient-to-br from-surface to-surface-rose",
   },
   {
     category: "Mixed",
-    title: "آزمون جامع",
     subtitle: "Komplett",
-    description: "ترکیبی از واژگان و گرامر.",
     accent: "bg-de-gold text-de-black",
     card: "border-de-gold/40 bg-gradient-to-br from-surface to-surface-warm",
   },
 ] as const;
 
 type AuthMode = "login" | "register";
-type QuizCategory = (typeof quizModes)[number]["category"];
+type QuizCategory = (typeof quizModeMeta)[number]["category"];
 type AuthResult = { accessToken: string; user: { displayName: string } };
 type QuizQuestion = {
   id: string;
@@ -118,17 +120,19 @@ function sortLevels(levels: string[]) {
 
 const defaultLessonId = "11111111-1111-1111-1111-111111111111";
 
-async function getError(response: Response) {
+async function getError(response: Response, fallback: string) {
   try {
     const body = await response.json();
-    return body.message ?? "درخواست انجام نشد.";
+    return body.message ?? fallback;
   } catch {
-    return "درخواست انجام نشد.";
+    return fallback;
   }
 }
 
 export default function App() {
-  const [language, setLanguage] = useState("fa");
+  const [language, setLanguage] = useState<Language>(ACTIVE_UI_LANGUAGE);
+  const uiLanguage = SHOW_LANGUAGE_SWITCHER ? language : ACTIVE_UI_LANGUAGE;
+  const t = getMessages(uiLanguage);
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [authOpen, setAuthOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -160,6 +164,11 @@ export default function App() {
   const [quizSubmitting, setQuizSubmitting] = useState(false);
   const [quizError, setQuizError] = useState("");
   const [quizResult, setQuizResult] = useState<AttemptResult | null>(null);
+
+  useEffect(() => {
+    document.documentElement.lang = uiLanguage;
+    document.documentElement.dir = dirFor(uiLanguage);
+  }, [uiLanguage]);
 
   async function loadProgress(accessToken: string) {
     setProgressLoading(true);
@@ -194,10 +203,10 @@ export default function App() {
       const response = await fetch(
         `${apiBaseUrl}/lessons/${selectedLessonId}/questions?category=${category}`,
       );
-      if (!response.ok) throw new Error("سؤال‌های این آزمون در دسترس نیست.");
+      if (!response.ok) throw new Error(t.questionsUnavailable);
       const questions = (await response.json()) as QuizQuestion[];
       if (!questions.length) {
-        throw new Error("برای این حالت هنوز سؤالی ثبت نشده است.");
+        throw new Error(t.noQuestionsForMode);
       }
       setQuizQuestions(questions);
       setQuizAnswers({});
@@ -208,7 +217,7 @@ export default function App() {
       setQuizOpen(true);
     } catch (error) {
       setQuizError(
-        error instanceof Error ? error.message : "دریافت سؤال‌ها انجام نشد.",
+        error instanceof Error ? error.message : t.fetchQuestionsFailed,
       );
     } finally {
       setQuizLoading(false);
@@ -237,7 +246,7 @@ export default function App() {
 
   async function submitQuiz() {
     if (!token) {
-      setQuizError("برای ثبت نتیجه، ابتدا وارد حساب کاربری شو.");
+      setQuizError(t.loginToSaveResult);
       openAuth("login");
       return;
     }
@@ -265,14 +274,14 @@ export default function App() {
           answers,
         }),
       });
-      if (!response.ok) throw new Error(await getError(response));
+      if (!response.ok) throw new Error(await getError(response, t.requestFailed));
       const result = (await response.json()) as AttemptResult;
       setQuizResult(result);
       await loadProgress(token);
       await loadHistory(token);
     } catch (error) {
       setQuizError(
-        error instanceof Error ? error.message : "ثبت نتیجه انجام نشد.",
+        error instanceof Error ? error.message : t.submitResultFailed,
       );
     } finally {
       setQuizSubmitting(false);
@@ -285,7 +294,7 @@ export default function App() {
       setLessonsError("");
       void fetch(`${apiBaseUrl}/lessons`)
         .then(async (response) => {
-          if (!response.ok) throw new Error("فهرست درس‌ها در دسترس نیست.");
+          if (!response.ok) throw new Error(t.lessonsUnavailable);
           return (await response.json()) as Lesson[];
         })
         .then((result) => {
@@ -300,16 +309,14 @@ export default function App() {
         })
         .catch((error: unknown) => {
           setLessonsError(
-            error instanceof Error
-              ? error.message
-              : "دریافت درس‌ها انجام نشد.",
+            error instanceof Error ? error.message : t.fetchLessonsFailed,
           );
         })
         .finally(() => setLessonsLoading(false));
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [t.fetchLessonsFailed, t.lessonsUnavailable]);
 
   useEffect(() => {
     const savedToken = localStorage.getItem("deutschquiz.accessToken");
@@ -343,7 +350,7 @@ export default function App() {
           ),
         },
       );
-      if (!response.ok) throw new Error(await getError(response));
+      if (!response.ok) throw new Error(await getError(response, t.requestFailed));
       const result = (await response.json()) as AuthResult;
       localStorage.setItem("deutschquiz.accessToken", result.accessToken);
       localStorage.setItem("deutschquiz.displayName", result.user.displayName);
@@ -354,7 +361,7 @@ export default function App() {
       await loadProgress(result.accessToken);
       await loadHistory(result.accessToken);
     } catch (error) {
-      setAuthError(error instanceof Error ? error.message : "خطایی رخ داد.");
+      setAuthError(error instanceof Error ? error.message : t.genericError);
     } finally {
       setAuthLoading(false);
     }
@@ -420,6 +427,14 @@ export default function App() {
     if (firstLesson) setSelectedLessonId(firstLesson.id);
   }
 
+  function categoryLabel(category: QuizCategory) {
+    if (category === "Vocabulary") return t.categoryVocabulary;
+    if (category === "Grammar") return t.categoryGrammar;
+    return t.categoryMixed;
+  }
+
+  const textAlign = uiLanguage === "en" ? "text-left" : "text-right";
+
   return (
     <main className="min-h-screen">
       <div className="de-flag h-2 w-full animate-flag rounded-b-2xl" aria-hidden>
@@ -440,12 +455,14 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => setLanguage(language === "fa" ? "en" : "fa")}
-              className="rounded-full border border-line bg-de-cream px-3 py-2 text-xs font-semibold text-muted transition hover:border-de-gold hover:bg-de-gold/30"
-            >
-              {language === "fa" ? "EN" : "FA"}
-            </button>
+            {SHOW_LANGUAGE_SWITCHER && (
+              <button
+                onClick={() => setLanguage(language === "fa" ? "en" : "fa")}
+                className="rounded-full border border-line bg-de-cream px-3 py-2 text-xs font-semibold text-muted transition hover:border-de-gold hover:bg-de-gold/30"
+              >
+                {language === "fa" ? "EN" : "FA"}
+              </button>
+            )}
             {token ? (
               <div className="flex items-center gap-2">
                 <span className="hidden text-sm font-semibold text-muted sm:inline">
@@ -455,7 +472,7 @@ export default function App() {
                   onClick={logout}
                   className="rounded-full border border-line bg-surface px-4 py-2 text-sm font-semibold text-de-black hover:bg-de-mist"
                 >
-                  خروج
+                  {t.logout}
                 </button>
               </div>
             ) : (
@@ -463,7 +480,7 @@ export default function App() {
                 onClick={() => openAuth("login")}
                 className="rounded-full bg-de-black px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-de-red"
               >
-                ورود
+                {t.login}
               </button>
             )}
           </div>
@@ -478,7 +495,7 @@ export default function App() {
               Deutsch<span className="text-de-red">Quiz</span>
             </p>
             <h1 className="mt-5 max-w-xl text-2xl font-bold leading-10 text-de-black sm:text-3xl">
-              آلمانی را با آزمون‌های کوتاه و دقیق تمرین کن.
+              {t.heroHeadline}
             </h1>
             <p className="mt-4 max-w-md rounded-2xl bg-white/70 px-3 py-2 text-sm leading-7 text-muted">
               {selectedLesson?.book ?? "Menschen"} · {selectedLesson?.level ?? "A1.1"} ·
@@ -490,13 +507,13 @@ export default function App() {
                 disabled={quizLoading}
                 className="rounded-2xl bg-de-red px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-de-red/25 transition hover:brightness-95 disabled:opacity-60"
               >
-                {quizLoading ? "آماده‌سازی..." : "شروع آزمون"}
+                {quizLoading ? t.preparing : t.startQuiz}
               </button>
               <button
                 onClick={() => (token ? void loadProgress(token) : openAuth("login"))}
                 className="rounded-2xl border-2 border-de-black bg-white px-6 py-3.5 text-sm font-bold text-de-black transition hover:bg-de-black hover:text-white"
               >
-                پیشرفت
+                {t.progress}
               </button>
             </div>
           </div>
@@ -513,11 +530,11 @@ export default function App() {
                 Bundesrepublik
               </p>
               <p className="mt-2 text-lg font-bold">
-                {selectedLesson ? "۲۰ سؤال آماده" : "درس را انتخاب کن"}
+                {selectedLesson ? t.questionsReady : t.pickLesson}
               </p>
               <p className="mt-1 text-sm text-white/85">
-                سطح {selectedLesson?.level ?? "A1.1"}
-                {progress ? ` · میانگین ${Math.round(progress.averageScore)}٪` : ""}
+                {t.levelLabel(selectedLesson?.level ?? "A1.1")}
+                {progress ? t.averageWith(Math.round(progress.averageScore)) : ""}
               </p>
             </div>
           </div>
@@ -527,10 +544,10 @@ export default function App() {
           <section className="mt-12 grid gap-3 sm:grid-cols-4">
             {(
               [
-                ["میانگین", `${Math.round(progress.averageScore)}٪`, "bg-surface-warm border-de-gold/40 text-de-black"],
-                ["بهترین", `${progress.bestScore}٪`, "bg-surface-rose border-de-rose/30 text-de-red"],
-                ["درست", `${progress.totalCorrectAnswers}/${progress.totalQuestionsAnswered}`, "bg-de-mist border-line text-de-black"],
-                ["زمان", `${Math.round(progress.totalTimeMs / 1000)}ث`, "bg-surface border-line text-de-black"],
+                [t.statAverage, `${Math.round(progress.averageScore)}٪`, "bg-surface-warm border-de-gold/40 text-de-black"],
+                [t.statBest, `${progress.bestScore}٪`, "bg-surface-rose border-de-rose/30 text-de-red"],
+                [t.statCorrect, `${progress.totalCorrectAnswers}/${progress.totalQuestionsAnswered}`, "bg-de-mist border-line text-de-black"],
+                [t.statTime, t.secondsShort(Math.round(progress.totalTimeMs / 1000)), "bg-surface border-line text-de-black"],
               ] as const
             ).map(([label, value, tone]) => (
               <div key={label} className={`rounded-3xl border px-4 py-5 shadow-sm ${tone}`}>
@@ -547,16 +564,16 @@ export default function App() {
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-de-red">Fortschritt</p>
                 <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
-                  پیشرفت · {selectedBook} {selectedLevel}
+                  {t.progressHeading(selectedBook, selectedLevel)}
                 </h2>
               </div>
               <span className="rounded-full bg-de-gold/40 px-3 py-1 text-xs font-bold text-de-black">
-                {selectedBookProgress.length} درس
+                {t.lessonCount(selectedBookProgress.length)}
               </span>
             </div>
             {selectedBookProgress.length === 0 ? (
               <p className="mt-6 rounded-3xl border border-dashed border-de-amber/50 bg-surface-warm px-4 py-6 text-center text-sm text-muted">
-                هنوز در این سطح آزمونی ثبت نکرده‌ای.
+                {t.noProgressInLevel}
               </p>
             ) : (
               <div className="mt-6 grid gap-3 md:grid-cols-2">
@@ -585,9 +602,9 @@ export default function App() {
                       />
                     </div>
                     <div className="mt-3 flex gap-4 text-xs text-muted">
-                      <span>{lesson.attemptsCount} آزمون</span>
-                      <span>بهترین {lesson.bestScore}٪</span>
-                      <span>{Math.round(lesson.totalTimeMs / 1000)}ث</span>
+                      <span>{t.attemptsCount(lesson.attemptsCount)}</span>
+                      <span>{t.bestScore(lesson.bestScore)}</span>
+                      <span>{t.secondsShort(Math.round(lesson.totalTimeMs / 1000))}</span>
                     </div>
                   </div>
                 ))}
@@ -602,7 +619,7 @@ export default function App() {
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-de-red">Verlauf</p>
                 <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
-                  تاریخچه‌ی آزمون‌ها
+                  {t.historyHeading}
                 </h2>
               </div>
               <button
@@ -610,12 +627,12 @@ export default function App() {
                 disabled={historyLoading}
                 className="rounded-full border border-line bg-de-cream px-4 py-2 text-xs font-semibold text-muted disabled:opacity-50"
               >
-                {historyLoading ? "..." : "به‌روزرسانی"}
+                {historyLoading ? t.loading : t.refresh}
               </button>
             </div>
             {history.length === 0 ? (
               <p className="mt-6 rounded-3xl border border-dashed border-line bg-de-mist px-4 py-6 text-center text-sm text-muted">
-                {historyLoading ? "در حال دریافت..." : "هنوز آزمونی ثبت نکرده‌ای."}
+                {historyLoading ? t.fetching : t.noAttemptsYet}
               </p>
             ) : (
               <div className="mt-6 space-y-3">
@@ -627,11 +644,7 @@ export default function App() {
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-full bg-de-red/10 px-2.5 py-1 text-sm font-bold text-de-red">
-                          {attempt.category === "Vocabulary"
-                            ? "واژگان"
-                            : attempt.category === "Grammar"
-                              ? "گرامر"
-                              : "جامع"}
+                          {categoryLabel(attempt.category)}
                         </span>
                         <span className="text-xs text-muted">
                           {attempt.book} {attempt.level} · Lektion {attempt.lessonNumber}
@@ -639,11 +652,14 @@ export default function App() {
                       </div>
                       <p className="mt-1 text-xs text-muted">
                         {attempt.completedAtUtc
-                          ? new Date(attempt.completedAtUtc).toLocaleString("fa-IR", {
-                              dateStyle: "medium",
-                              timeStyle: "short",
-                            })
-                          : "تاریخ نامشخص"}
+                          ? new Date(attempt.completedAtUtc).toLocaleString(
+                              localeFor(uiLanguage),
+                              {
+                                dateStyle: "medium",
+                                timeStyle: "short",
+                              },
+                            )
+                          : t.dateUnknown}
                       </p>
                     </div>
                     <div className="flex items-center gap-5 text-left">
@@ -657,9 +673,9 @@ export default function App() {
                       </div>
                       <div>
                         <span className="block text-sm font-bold text-de-black">
-                          {Math.round(attempt.totalTimeMs / 1000)}ث
+                          {t.secondsShort(Math.round(attempt.totalTimeMs / 1000))}
                         </span>
-                        <span className="text-[11px] text-muted">زمان</span>
+                        <span className="text-[11px] text-muted">{t.timeLabel}</span>
                       </div>
                     </div>
                   </div>
@@ -671,13 +687,13 @@ export default function App() {
 
         <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
           <p className="text-xs font-bold uppercase tracking-wider text-de-red">Lehrwerk</p>
-          <h2 className="mt-2 font-display text-2xl font-bold text-de-black">انتخاب کتاب</h2>
+          <h2 className="mt-2 font-display text-2xl font-bold text-de-black">{t.pickBook}</h2>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {bookOptions.map((book) => (
               <button
                 key={book.name}
                 onClick={() => selectBook(book.name)}
-                className={`rounded-3xl border p-5 text-right shadow-sm transition ${
+                className={`rounded-3xl border p-5 shadow-sm transition ${textAlign} ${
                   selectedBook === book.name
                     ? "border-de-black bg-gradient-to-br from-de-black to-surface-ink text-white"
                     : "border-line bg-gradient-to-br from-white to-de-cream text-de-black hover:border-de-red"
@@ -716,12 +732,14 @@ export default function App() {
           <div className="mt-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-de-red">Lektion</p>
-              <h2 className="mt-2 font-display text-2xl font-bold text-de-black">انتخاب درس</h2>
+              <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                {t.pickLessonHeading}
+              </h2>
             </div>
             <span className="rounded-full bg-de-mist px-3 py-1 text-xs text-muted">
               {lessonsLoading
-                ? "در حال دریافت..."
-                : `${bookLessons.length} درس · ${selectedBook} ${selectedLevel}`}
+                ? t.fetching
+                : t.lessonsMeta(bookLessons.length, selectedBook, selectedLevel)}
             </span>
           </div>
           {lessonsError && (
@@ -734,7 +752,7 @@ export default function App() {
               <button
                 key={lesson.id}
                 onClick={() => setSelectedLessonId(lesson.id)}
-                className={`rounded-3xl border p-4 text-right shadow-sm transition ${
+                className={`rounded-3xl border p-4 shadow-sm transition ${textAlign} ${
                   selectedLessonId === lesson.id
                     ? "border-de-red bg-gradient-to-br from-surface-rose to-white shadow-de-red/10"
                     : "border-line bg-white hover:border-de-gold hover:bg-surface-warm"
@@ -753,32 +771,37 @@ export default function App() {
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-de-red">Quiz</p>
-              <h2 className="mt-2 font-display text-2xl font-bold text-de-black">نوع آزمون</h2>
+              <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                {t.quizTypeHeading}
+              </h2>
             </div>
             <span className="rounded-full bg-de-gold/50 px-3 py-1 text-xs font-bold text-de-black">
               Lektion {selectedLesson?.number ?? 1}
             </span>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
-            {quizModes.map((mode) => (
-              <button
-                key={mode.category}
-                onClick={() => void startQuiz(mode.category)}
-                disabled={quizLoading}
-                className={`group rounded-[1.75rem] border p-5 text-right shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait ${mode.card}`}
-              >
-                <span
-                  className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${mode.accent}`}
+            {quizModeMeta.map((mode) => {
+              const copy = t.quizModes[mode.category];
+              return (
+                <button
+                  key={mode.category}
+                  onClick={() => void startQuiz(mode.category)}
+                  disabled={quizLoading}
+                  className={`group rounded-[1.75rem] border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait ${textAlign} ${mode.card}`}
                 >
-                  {mode.subtitle}
-                </span>
-                <h3 className="mt-4 text-lg font-bold text-de-black">{mode.title}</h3>
-                <p className="mt-2 text-sm leading-7 text-muted">{mode.description}</p>
-                <div className="mt-5 text-sm font-bold text-de-red group-hover:underline">
-                  شروع
-                </div>
-              </button>
-            ))}
+                  <span
+                    className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${mode.accent}`}
+                  >
+                    {mode.subtitle}
+                  </span>
+                  <h3 className="mt-4 text-lg font-bold text-de-black">{copy.title}</h3>
+                  <p className="mt-2 text-sm leading-7 text-muted">{copy.description}</p>
+                  <div className="mt-5 text-sm font-bold text-de-red group-hover:underline">
+                    {t.start}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </section>
       </div>
@@ -804,10 +827,13 @@ export default function App() {
                   {Math.round(quizResult.score)}٪
                 </h2>
                 <p className="mt-3 text-sm text-muted">
-                  {quizResult.correctAnswers} از {quizResult.totalQuestions} درست ·{" "}
-                  {Math.round(quizResult.totalTimeMs / 1000)} ثانیه
+                  {t.resultCorrectSummary(
+                    quizResult.correctAnswers,
+                    quizResult.totalQuestions,
+                    Math.round(quizResult.totalTimeMs / 1000),
+                  )}
                 </p>
-                <div className="mt-7 space-y-2 text-right">
+                <div className={`mt-7 space-y-2 ${textAlign}`}>
                   {quizResult.answers.map((answer, index) => (
                     <div
                       key={answer.questionId}
@@ -821,11 +847,12 @@ export default function App() {
                         {index + 1}. {answer.prompt}
                       </p>
                       <p className="mt-2 text-xs text-muted" dir="ltr">
-                        پاسخ تو: <span className="font-bold">{answer.selectedAnswer}</span>
+                        {t.yourAnswer}{" "}
+                        <span className="font-bold">{answer.selectedAnswer}</span>
                         {!answer.isCorrect && (
                           <>
                             {" "}
-                            · درست:{" "}
+                            · {t.correctLabel}{" "}
                             <span className="font-bold text-de-black">{answer.correctAnswer}</span>
                           </>
                         )}
@@ -840,7 +867,7 @@ export default function App() {
                   onClick={() => setQuizOpen(false)}
                   className="mt-7 rounded-2xl bg-de-black px-6 py-3 text-sm font-bold text-white"
                 >
-                  بازگشت
+                  {t.back}
                 </button>
               </div>
             ) : (
@@ -855,7 +882,7 @@ export default function App() {
                           : "Komplett"}
                     </p>
                     <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
-                      سؤال {quizIndex + 1} از {quizQuestions.length}
+                      {t.questionOf(quizIndex + 1, quizQuestions.length)}
                     </h2>
                   </div>
                   <button onClick={() => setQuizOpen(false)} className="text-xl text-muted">
@@ -907,7 +934,7 @@ export default function App() {
                     onClick={() => setQuizOpen(false)}
                     className="rounded-2xl border border-line px-4 py-3 text-sm font-semibold text-muted"
                   >
-                    انصراف
+                    {t.cancel}
                   </button>
                   {quizIndex < quizQuestions.length - 1 ? (
                     <button
@@ -915,7 +942,7 @@ export default function App() {
                       disabled={!quizAnswers[activeQuestion.id]}
                       className="rounded-2xl bg-de-red px-5 py-3 text-sm font-bold text-white shadow-md shadow-de-red/20 disabled:opacity-40"
                     >
-                      بعدی
+                      {t.next}
                     </button>
                   ) : (
                     <button
@@ -923,7 +950,7 @@ export default function App() {
                       disabled={!quizAnswers[activeQuestion.id] || quizSubmitting}
                       className="rounded-2xl bg-de-black px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
                     >
-                      {quizSubmitting ? "ثبت..." : "ثبت آزمون"}
+                      {quizSubmitting ? t.submitting : t.submitQuiz}
                     </button>
                   )}
                 </div>
@@ -949,7 +976,7 @@ export default function App() {
               <div>
                 <p className="font-display text-sm font-bold text-de-black">DeutschQuiz</p>
                 <h2 className="mt-2 text-2xl font-bold text-de-black">
-                  {authMode === "login" ? "ورود" : "ثبت‌نام"}
+                  {authMode === "login" ? t.login : t.register}
                 </h2>
               </div>
               <button onClick={() => setAuthOpen(false)} className="text-xl text-muted">
@@ -962,7 +989,7 @@ export default function App() {
                   required
                   value={displayName}
                   onChange={(event) => setDisplayName(event.target.value)}
-                  placeholder="نام نمایشی"
+                  placeholder={t.displayNamePlaceholder}
                   className="w-full rounded-2xl border border-line bg-de-cream px-4 py-3 text-sm outline-none focus:border-de-gold"
                 />
               )}
@@ -971,7 +998,7 @@ export default function App() {
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder="ایمیل"
+                placeholder={t.emailPlaceholder}
                 className="w-full rounded-2xl border border-line bg-de-cream px-4 py-3 text-sm outline-none focus:border-de-gold"
               />
               <input
@@ -980,7 +1007,7 @@ export default function App() {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="رمز عبور (حداقل ۸ کاراکتر)"
+                placeholder={t.passwordPlaceholder}
                 className="w-full rounded-2xl border border-line bg-de-cream px-4 py-3 text-sm outline-none focus:border-de-gold"
               />
               {authError && (
@@ -993,10 +1020,10 @@ export default function App() {
                 className="w-full rounded-2xl bg-de-red px-4 py-3.5 text-sm font-bold text-white shadow-md shadow-de-red/25 disabled:opacity-60"
               >
                 {authLoading
-                  ? "در حال ارسال..."
+                  ? t.authSubmitting
                   : authMode === "login"
-                    ? "ورود"
-                    : "ثبت‌نام"}
+                    ? t.login
+                    : t.register}
               </button>
             </form>
             <button
@@ -1006,9 +1033,7 @@ export default function App() {
               }}
               className="mt-4 w-full text-center text-xs font-semibold text-muted"
             >
-              {authMode === "login"
-                ? "حساب نداری؟ ثبت‌نام کن"
-                : "قبلاً حساب ساخته‌ای؟ وارد شو"}
+              {authMode === "login" ? t.noAccountRegister : t.haveAccountLogin}
             </button>
           </div>
         </div>
