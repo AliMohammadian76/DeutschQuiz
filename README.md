@@ -9,9 +9,9 @@
 
 ## کار تیمی و شاخه‌ها
 
-- شاخه‌ی پیش‌فرض روزمره: `develop`
-- شاخه‌ی نسخهٔ نهایی / انتشار: `master`
-- جزئیات workflow، PRها و دعوت همکار: [CONTRIBUTING.md](CONTRIBUTING.md)
+- شاخه‌ی پیش‌فرض: `master` (همیشه قابل انتشار)
+- کار روزانه روی شاخه‌های کوتاه‌مدت (`frontend/…`، `backend/…`) و ادغام با PR به `master`
+- جزئیات workflow و دعوت همکار: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ## وضعیت فعلی
 
