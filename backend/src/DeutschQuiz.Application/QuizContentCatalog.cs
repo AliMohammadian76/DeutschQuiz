@@ -323,9 +323,21 @@ public static class QuizContentCatalog
         new(
             Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
             "Starten wir!",
-            "A1.1",
+            "A1",
             "Hueber",
-            StartenWirQuizContentCatalog.Lessons)
+            StartenWirQuizContentCatalog.Lessons),
+        new(
+            Guid.Parse("b2b2b2b2-b2b2-b2b2-b2b2-b2b2b2b2b2b2"),
+            "Starten wir!",
+            "A2",
+            "Hueber",
+            StartenWirA2QuizContentCatalog.Lessons),
+        new(
+            Guid.Parse("b3b3b3b3-b3b3-b3b3-b3b3-b3b3b3b3b3b3"),
+            "Starten wir!",
+            "B1",
+            "Hueber",
+            StartenWirB1QuizContentCatalog.Lessons)
     ];
 
     public static IReadOnlyList<QuizContentLesson> AllLessons { get; } =

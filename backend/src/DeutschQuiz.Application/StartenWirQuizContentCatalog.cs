@@ -3,7 +3,7 @@ using DeutschQuiz.Domain;
 namespace DeutschQuiz.Application;
 
 /// <summary>
-/// An independent starter catalogue for Starten wir! A1.1.
+/// An independent starter catalogue for Starten wir! A1.
 /// The prompts are authored for DeutschQuiz and are not copied from the textbook.
 /// </summary>
 public static class StartenWirQuizContentCatalog
@@ -17,7 +17,7 @@ public static class StartenWirQuizContentCatalog
             V("Auf die Frage „Wie geht es dir?“ passt ...", "Gut, danke.", "In Berlin.", "Am Montag."),
             V("„Ich komme ___ Spanien.“", "aus", "am", "um"),
             V("Nach dem Namen fragt man mit ...", "Wie heißt du?", "Wo wohnst du?", "Was machst du?"),
-            V("Eine Sprache auf A1.1 ist ...", "Deutsch", "Dienstag", "Deutschland"),
+            V("Eine Sprache auf A1 ist ...", "Deutsch", "Dienstag", "Deutschland"),
             V("Zum Abschied sagt man ...", "Auf Wiedersehen!", "Guten Appetit!", "Guten Morgen!"),
             V("„Wo wohnst du?“ fragt nach ...", "dem Wohnort", "der Uhrzeit", "dem Beruf"),
             V("Eine höfliche Anrede ist ...", "Sie", "du", "ihr"),
@@ -198,7 +198,7 @@ public static class StartenWirQuizContentCatalog
             .ToList();
 
         return new QuizContentLesson(
-            new Lesson(lessonId, "Starten wir!", "A1.1", number, title),
+            new Lesson(lessonId, "Starten wir!", "A1", number, title),
             questions.Select((question, index) => new QuizQuestion(
                 Guid.Parse($"30000000-0000-0000-0000-{baseQuestionId + index:000000000000}"),
                 lessonId,

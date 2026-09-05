@@ -30,6 +30,16 @@ public static class QuizDbSeeder
                 db.Books.Add(book);
                 await db.SaveChangesAsync(cancellationToken);
             }
+            else if (
+                book.Name != catalog.Name ||
+                book.Level != catalog.Level ||
+                book.Publisher != catalog.Publisher)
+            {
+                book.Name = catalog.Name;
+                book.Level = catalog.Level;
+                book.Publisher = catalog.Publisher;
+                await db.SaveChangesAsync(cancellationToken);
+            }
 
             foreach (var content in catalog.Lessons)
             {
