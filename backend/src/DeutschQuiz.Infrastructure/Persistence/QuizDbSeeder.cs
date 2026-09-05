@@ -28,6 +28,7 @@ public static class QuizDbSeeder
                     Publisher = catalog.Publisher
                 };
                 db.Books.Add(book);
+                await db.SaveChangesAsync(cancellationToken);
             }
 
             foreach (var content in catalog.Lessons)
@@ -44,6 +45,8 @@ public static class QuizDbSeeder
                         Book = book
                     };
                     db.Lessons.Add(lesson);
+                    book.Lessons.Add(lesson);
+                    await db.SaveChangesAsync(cancellationToken);
                 }
 
                 var existingQuestions = await db.Questions
@@ -97,9 +100,14 @@ public static class QuizDbSeeder
                         db.QuestionOptions.Remove(extraOption);
                     }
                 }
+
+                await db.SaveChangesAsync(cancellationToken);
+                db.ChangeTracker.Clear();
+
+                book = await db.Books
+                    .Include(item => item.Lessons)
+                    .SingleAsync(item => item.Id == catalog.Id, cancellationToken);
             }
         }
-
-        await db.SaveChangesAsync(cancellationToken);
     }
 }
