@@ -291,6 +291,12 @@ public static class QuizContentCatalog
             "Hueber",
             Lessons),
         new(
+            Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"),
+            "Menschen",
+            "A1.2",
+            "Hueber",
+            MenschenA12QuizContentCatalog.Lessons),
+        new(
             Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
             "Starten wir!",
             "A1.1",
