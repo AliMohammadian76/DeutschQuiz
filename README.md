@@ -1,6 +1,6 @@
 # DeutschQuiz
 
-وب‌اپ آزمون زبان آلمانی برای `Menschen A1.1` و `Starten wir! A1.1`.
+وب‌اپ آزمون زبان آلمانی برای `Menschen A1.1`، `Menschen A1.2` و `Starten wir! A1.1`.
 
 ## ساختار
 
@@ -15,7 +15,7 @@
 
 ## وضعیت فعلی
 
-- آزمون‌های درس‌به‌درس برای ۱۲ درس هر دو کتاب `Menschen A1.1` و `Starten wir! A1.1`
+- آزمون‌های درس‌به‌درس برای `Menschen A1.1` (۱۲ درس)، `Menschen A1.2` (دروس ۱۳–۲۴) و `Starten wir! A1.1` (۱۲ درس)
 - سه حالت آزمون برای هر درس: واژگان (`Vocabulary`)، گرامر (`Grammar`) و جامع (`Mixed`)
 - هر درس در حالت جامع ۲۰ سؤال دارد: ۱۰ واژگان و ۱۰ گرامر
 - سؤال‌های درس‌های بالاتر، نکات پایه‌ی درس‌های قبلی را هم به‌صورت تجمعی مرور می‌کنند.
@@ -49,6 +49,21 @@ APIهای اولیه:
 10. `Unterwegs`
 11. `Wetter und Jahreszeiten`
 12. `Reisen und Pläne`
+
+کاتالوگ `Menschen A1.2` شامل این درس‌هاست:
+
+13. `Wir suchen das Hotel Maritim`
+14. `Wie findest du Ottos Haus?`
+15. `In Giesing wohnt das Leben`
+16. `Wir haben hier ein Problem`
+17. `Wer will Popstar werden?`
+18. `Geben Sie ihm doch diesen Tee`
+19. `Der hatte doch keinen Bauch`
+20. `Komm sofort runter!`
+21. `Bei Rot musst du stehen`
+22. `Am besten sind seine Schuhe`
+23. `Ins Wasser gefallen`
+24. `Ich würde am liebsten jeden Tag feiern`
 
 ## حساب کاربری و پیشرفت
 
