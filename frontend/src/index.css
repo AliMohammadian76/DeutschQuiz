@@ -1,14 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --de-black: #0a0a0a;
-  --de-red: #dd0000;
-  --de-gold: #ffcc00;
-  --background: #f6f4ef;
-  --foreground: #0a0a0a;
-  --muted: #5c5c5c;
-  --line: #e4e0d8;
-  --surface: #fffcf7;
+  --de-black: #141414;
+  --de-red: #e11d2e;
+  --de-gold: #f5c518;
+  --de-rose: #ff6b6b;
+  --de-amber: #ffb703;
+  --de-cream: #fff8e8;
+  --de-mist: #f3efe6;
+  --background: #f7f2e8;
+  --foreground: #141414;
+  --muted: #6b6458;
+  --line: #e8dfd0;
+  --surface: #fffcf6;
+  --surface-warm: #fff4d6;
+  --surface-rose: #fff0f0;
+  --surface-ink: #1c1c1c;
 }
 
 @theme inline {
@@ -17,9 +24,16 @@
   --color-de-black: var(--de-black);
   --color-de-red: var(--de-red);
   --color-de-gold: var(--de-gold);
+  --color-de-rose: var(--de-rose);
+  --color-de-amber: var(--de-amber);
+  --color-de-cream: var(--de-cream);
+  --color-de-mist: var(--de-mist);
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-surface: var(--surface);
+  --color-surface-warm: var(--surface-warm);
+  --color-surface-rose: var(--surface-rose);
+  --color-surface-ink: var(--surface-ink);
   --font-sans: "Vazirmatn", system-ui, sans-serif;
   --font-display: "Syne", "Vazirmatn", sans-serif;
 }
@@ -28,8 +42,9 @@ body {
   margin: 0;
   min-height: 100%;
   background:
-    radial-gradient(ellipse 80% 50% at 100% 0%, rgb(255 204 0 / 18%), transparent 55%),
-    radial-gradient(ellipse 60% 40% at 0% 100%, rgb(221 0 0 / 8%), transparent 50%),
+    radial-gradient(ellipse 70% 45% at 90% -10%, rgb(245 197 24 / 35%), transparent 55%),
+    radial-gradient(ellipse 55% 40% at 0% 100%, rgb(225 29 46 / 14%), transparent 50%),
+    radial-gradient(ellipse 40% 30% at 50% 50%, rgb(255 248 232 / 80%), transparent 70%),
     var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
@@ -61,6 +76,13 @@ body {
   background: var(--de-gold);
 }
 
+.card-soft {
+  border-radius: 1.5rem;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: 0 10px 30px rgb(20 20 20 / 4%);
+}
+
 @keyframes rise-in {
   from {
     opacity: 0;
@@ -74,10 +96,12 @@ body {
 
 @keyframes flag-reveal {
   from {
-    clip-path: inset(0 100% 0 0);
+    clip-path: inset(0 40% 0 0);
+    opacity: 0.6;
   }
   to {
     clip-path: inset(0 0 0 0);
+    opacity: 1;
   }
 }
 

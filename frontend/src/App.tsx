@@ -10,6 +10,7 @@ const quizModes = [
     subtitle: "Wortschatz",
     description: "کلمات کلیدی درس را مرور کن.",
     accent: "bg-de-black text-white",
+    card: "border-de-black/10 bg-gradient-to-br from-surface to-de-mist",
   },
   {
     category: "Grammar",
@@ -17,6 +18,7 @@ const quizModes = [
     subtitle: "Grammatik",
     description: "ساختارهای پایه و جمله‌سازی را بسنج.",
     accent: "bg-de-red text-white",
+    card: "border-de-red/15 bg-gradient-to-br from-surface to-surface-rose",
   },
   {
     category: "Mixed",
@@ -24,6 +26,7 @@ const quizModes = [
     subtitle: "Komplett",
     description: "ترکیبی از واژگان و گرامر.",
     accent: "bg-de-gold text-de-black",
+    card: "border-de-gold/40 bg-gradient-to-br from-surface to-surface-warm",
   },
 ] as const;
 
@@ -407,14 +410,14 @@ export default function App() {
 
   return (
     <main className="min-h-screen">
-      <div className="de-flag h-1.5 w-full animate-flag" aria-hidden>
+      <div className="de-flag h-2 w-full animate-flag rounded-b-2xl" aria-hidden>
         <span /><span /><span />
       </div>
 
       <div className="mx-auto max-w-6xl px-5 py-6 sm:px-8">
-        <header className="animate-rise flex items-center justify-between">
+        <header className="animate-rise flex items-center justify-between rounded-3xl border border-line bg-surface/90 px-4 py-3 shadow-sm backdrop-blur sm:px-5">
           <div className="flex items-center gap-3">
-            <div className="de-flag h-10 w-7 shrink-0 rounded-sm shadow-sm" aria-hidden>
+            <div className="de-flag h-11 w-8 shrink-0 rounded-xl shadow-md" aria-hidden>
               <span /><span /><span />
             </div>
             <div>
@@ -427,7 +430,7 @@ export default function App() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setLanguage(language === "fa" ? "en" : "fa")}
-              className="border border-line bg-surface px-3 py-2 text-xs font-semibold text-muted transition hover:border-de-black"
+              className="rounded-full border border-line bg-de-cream px-3 py-2 text-xs font-semibold text-muted transition hover:border-de-gold hover:bg-de-gold/30"
             >
               {language === "fa" ? "EN" : "FA"}
             </button>
@@ -438,7 +441,7 @@ export default function App() {
                 </span>
                 <button
                   onClick={logout}
-                  className="border border-line bg-surface px-4 py-2 text-sm font-semibold text-de-black"
+                  className="rounded-full border border-line bg-surface px-4 py-2 text-sm font-semibold text-de-black hover:bg-de-mist"
                 >
                   خروج
                 </button>
@@ -446,7 +449,7 @@ export default function App() {
             ) : (
               <button
                 onClick={() => openAuth("login")}
-                className="bg-de-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-de-red"
+                className="rounded-full bg-de-black px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-de-red"
               >
                 ورود
               </button>
@@ -454,15 +457,18 @@ export default function App() {
           </div>
         </header>
 
-        <section className="mt-12 grid items-stretch gap-10 lg:grid-cols-[1.15fr_0.85fr]">
-          <div className="animate-rise relative z-10 self-center" style={{ animationDelay: "80ms" }}>
+        <section className="mt-10 grid items-stretch gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+          <div
+            className="animate-rise relative z-10 self-center rounded-[2rem] border border-line bg-gradient-to-br from-surface via-de-cream to-surface-warm p-6 shadow-sm sm:p-8"
+            style={{ animationDelay: "80ms" }}
+          >
             <p className="font-display text-5xl font-extrabold leading-none tracking-tight text-de-black sm:text-7xl">
-              DeutschQuiz
+              Deutsch<span className="text-de-red">Quiz</span>
             </p>
             <h1 className="mt-5 max-w-xl text-2xl font-bold leading-10 text-de-black sm:text-3xl">
               آلمانی را با آزمون‌های کوتاه و دقیق تمرین کن.
             </h1>
-            <p className="mt-4 max-w-md text-sm leading-7 text-muted">
+            <p className="mt-4 max-w-md rounded-2xl bg-white/70 px-3 py-2 text-sm leading-7 text-muted">
               {selectedLesson?.book ?? "Menschen"} · {selectedLesson?.level ?? "A1.1"} ·
               Lektion {selectedLesson?.number ?? 1}
             </p>
@@ -470,13 +476,13 @@ export default function App() {
               <button
                 onClick={() => void startQuiz("Mixed")}
                 disabled={quizLoading}
-                className="bg-de-red px-6 py-3.5 text-sm font-bold text-white transition hover:brightness-95 disabled:opacity-60"
+                className="rounded-2xl bg-de-red px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-de-red/25 transition hover:brightness-95 disabled:opacity-60"
               >
                 {quizLoading ? "آماده‌سازی..." : "شروع آزمون"}
               </button>
               <button
                 onClick={() => (token ? void loadProgress(token) : openAuth("login"))}
-                className="border border-de-black bg-transparent px-6 py-3.5 text-sm font-bold text-de-black transition hover:bg-de-black hover:text-white"
+                className="rounded-2xl border-2 border-de-black bg-white px-6 py-3.5 text-sm font-bold text-de-black transition hover:bg-de-black hover:text-white"
               >
                 پیشرفت
               </button>
@@ -484,20 +490,20 @@ export default function App() {
           </div>
 
           <div
-            className="animate-flag relative min-h-[280px] overflow-hidden lg:min-h-[360px]"
+            className="animate-flag relative min-h-[280px] overflow-hidden rounded-[2rem] shadow-xl shadow-de-black/15 lg:min-h-[360px]"
             style={{ animationDelay: "200ms" }}
           >
             <div className="de-flag absolute inset-0" aria-hidden>
               <span /><span /><span />
             </div>
-            <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/50 to-transparent p-6 text-white">
-              <p className="font-display text-sm font-bold uppercase tracking-[0.2em]">
+            <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-t from-black/60 via-black/20 to-transparent p-6 text-white">
+              <p className="font-display text-sm font-bold uppercase tracking-[0.2em] text-de-gold">
                 Bundesrepublik
               </p>
               <p className="mt-2 text-lg font-bold">
                 {selectedLesson ? "۲۰ سؤال آماده" : "درس را انتخاب کن"}
               </p>
-              <p className="mt-1 text-sm text-white/80">
+              <p className="mt-1 text-sm text-white/85">
                 سطح {selectedLesson?.level ?? "A1.1"}
                 {progress ? ` · میانگین ${Math.round(progress.averageScore)}٪` : ""}
               </p>
@@ -506,25 +512,25 @@ export default function App() {
         </section>
 
         {progress && (
-          <section className="mt-14 grid gap-px overflow-hidden border border-line bg-line sm:grid-cols-4">
+          <section className="mt-12 grid gap-3 sm:grid-cols-4">
             {(
               [
-                ["میانگین", `${Math.round(progress.averageScore)}٪`],
-                ["بهترین", `${progress.bestScore}٪`],
-                ["درست", `${progress.totalCorrectAnswers}/${progress.totalQuestionsAnswered}`],
-                ["زمان", `${Math.round(progress.totalTimeMs / 1000)}ث`],
+                ["میانگین", `${Math.round(progress.averageScore)}٪`, "bg-surface-warm border-de-gold/40 text-de-black"],
+                ["بهترین", `${progress.bestScore}٪`, "bg-surface-rose border-de-rose/30 text-de-red"],
+                ["درست", `${progress.totalCorrectAnswers}/${progress.totalQuestionsAnswered}`, "bg-de-mist border-line text-de-black"],
+                ["زمان", `${Math.round(progress.totalTimeMs / 1000)}ث`, "bg-surface border-line text-de-black"],
               ] as const
-            ).map(([label, value]) => (
-              <div key={label} className="bg-surface px-4 py-5">
+            ).map(([label, value, tone]) => (
+              <div key={label} className={`rounded-3xl border px-4 py-5 shadow-sm ${tone}`}>
                 <p className="text-xs text-muted">{label}</p>
-                <p className="font-display mt-2 text-2xl font-bold text-de-black">{value}</p>
+                <p className="font-display mt-2 text-2xl font-bold">{value}</p>
               </div>
             ))}
           </section>
         )}
 
         {token && progress && (
-          <section className="mt-14 border-t border-line pt-10">
+          <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-de-red">Fortschritt</p>
@@ -532,16 +538,21 @@ export default function App() {
                   پیشرفت · {selectedBook} {selectedLevel}
                 </h2>
               </div>
-              <span className="text-xs text-muted">{selectedBookProgress.length} درس</span>
+              <span className="rounded-full bg-de-gold/40 px-3 py-1 text-xs font-bold text-de-black">
+                {selectedBookProgress.length} درس
+              </span>
             </div>
             {selectedBookProgress.length === 0 ? (
-              <p className="mt-6 border border-dashed border-line bg-surface px-4 py-6 text-center text-sm text-muted">
+              <p className="mt-6 rounded-3xl border border-dashed border-de-amber/50 bg-surface-warm px-4 py-6 text-center text-sm text-muted">
                 هنوز در این سطح آزمونی ثبت نکرده‌ای.
               </p>
             ) : (
               <div className="mt-6 grid gap-3 md:grid-cols-2">
                 {selectedBookProgress.map((lesson) => (
-                  <div key={lesson.lessonId} className="border border-line bg-surface p-4">
+                  <div
+                    key={lesson.lessonId}
+                    className="rounded-3xl border border-line bg-gradient-to-br from-white to-de-mist p-4 shadow-sm"
+                  >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <span className="text-xs font-bold text-de-red">
@@ -551,13 +562,13 @@ export default function App() {
                           {lesson.title}
                         </p>
                       </div>
-                      <span className="bg-de-gold px-2 py-1 text-xs font-bold text-de-black">
+                      <span className="rounded-full bg-de-gold px-3 py-1 text-xs font-bold text-de-black">
                         {Math.round(lesson.averageScore)}٪
                       </span>
                     </div>
-                    <div className="mt-4 h-1 overflow-hidden bg-line">
+                    <div className="mt-4 h-2 overflow-hidden rounded-full bg-line">
                       <div
-                        className="h-full bg-de-red"
+                        className="h-full rounded-full bg-gradient-to-l from-de-red to-de-rose"
                         style={{ width: `${lesson.averageScore}%` }}
                       />
                     </div>
@@ -574,7 +585,7 @@ export default function App() {
         )}
 
         {token && (
-          <section className="mt-14 border-t border-line pt-10">
+          <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-de-red">Verlauf</p>
@@ -585,25 +596,25 @@ export default function App() {
               <button
                 onClick={() => void loadHistory(token)}
                 disabled={historyLoading}
-                className="border border-line px-3 py-2 text-xs font-semibold text-muted disabled:opacity-50"
+                className="rounded-full border border-line bg-de-cream px-4 py-2 text-xs font-semibold text-muted disabled:opacity-50"
               >
                 {historyLoading ? "..." : "به‌روزرسانی"}
               </button>
             </div>
             {history.length === 0 ? (
-              <p className="mt-6 border border-dashed border-line bg-surface px-4 py-6 text-center text-sm text-muted">
+              <p className="mt-6 rounded-3xl border border-dashed border-line bg-de-mist px-4 py-6 text-center text-sm text-muted">
                 {historyLoading ? "در حال دریافت..." : "هنوز آزمونی ثبت نکرده‌ای."}
               </p>
             ) : (
-              <div className="mt-6 divide-y divide-line border border-line bg-surface">
+              <div className="mt-6 space-y-3">
                 {history.map((attempt) => (
                   <div
                     key={attempt.attemptId}
-                    className="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 rounded-3xl border border-line bg-gradient-to-l from-surface-warm/40 to-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-sm font-bold text-de-black">
+                        <span className="rounded-full bg-de-red/10 px-2.5 py-1 text-sm font-bold text-de-red">
                           {attempt.category === "Vocabulary"
                             ? "واژگان"
                             : attempt.category === "Grammar"
@@ -646,7 +657,7 @@ export default function App() {
           </section>
         )}
 
-        <section className="mt-16 border-t border-line pt-10">
+        <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
           <p className="text-xs font-bold uppercase tracking-wider text-de-red">Lehrwerk</p>
           <h2 className="mt-2 font-display text-2xl font-bold text-de-black">انتخاب کتاب</h2>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -654,17 +665,17 @@ export default function App() {
               <button
                 key={book.name}
                 onClick={() => selectBook(book.name)}
-                className={`border p-5 text-right transition ${
+                className={`rounded-3xl border p-5 text-right shadow-sm transition ${
                   selectedBook === book.name
-                    ? "border-de-black bg-de-black text-white"
-                    : "border-line bg-surface text-de-black hover:border-de-red"
+                    ? "border-de-black bg-gradient-to-br from-de-black to-surface-ink text-white"
+                    : "border-line bg-gradient-to-br from-white to-de-cream text-de-black hover:border-de-red"
                 }`}
               >
                 <p className="font-display text-xl font-bold" dir="ltr">
                   {book.name}
                 </p>
                 <p
-                  className={`mt-2 text-xs ${selectedBook === book.name ? "text-white/70" : "text-muted"}`}
+                  className={`mt-2 text-xs ${selectedBook === book.name ? "text-de-gold" : "text-muted"}`}
                 >
                   {book.levels.join(" · ")}
                 </p>
@@ -677,10 +688,10 @@ export default function App() {
                 <button
                   key={level}
                   onClick={() => selectLevel(level)}
-                  className={`px-4 py-2 text-xs font-bold transition ${
+                  className={`rounded-full px-4 py-2 text-xs font-bold transition ${
                     selectedLevel === level
-                      ? "bg-de-gold text-de-black"
-                      : "border border-line bg-surface text-muted hover:border-de-black"
+                      ? "bg-de-gold text-de-black shadow-md shadow-de-gold/40"
+                      : "border border-line bg-white text-muted hover:border-de-amber hover:bg-surface-warm"
                   }`}
                   dir="ltr"
                 >
@@ -695,26 +706,26 @@ export default function App() {
               <p className="text-xs font-bold uppercase tracking-wider text-de-red">Lektion</p>
               <h2 className="mt-2 font-display text-2xl font-bold text-de-black">انتخاب درس</h2>
             </div>
-            <span className="text-xs text-muted">
+            <span className="rounded-full bg-de-mist px-3 py-1 text-xs text-muted">
               {lessonsLoading
                 ? "در حال دریافت..."
                 : `${bookLessons.length} درس · ${selectedBook} ${selectedLevel}`}
             </span>
           </div>
           {lessonsError && (
-            <p className="mt-4 border border-de-red/30 bg-de-red/5 px-3 py-2 text-sm font-semibold text-de-red">
+            <p className="mt-4 rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-sm font-semibold text-de-red">
               {lessonsError}
             </p>
           )}
-          <div className="mt-6 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {bookLessons.map((lesson) => (
               <button
                 key={lesson.id}
                 onClick={() => setSelectedLessonId(lesson.id)}
-                className={`border p-4 text-right transition ${
+                className={`rounded-3xl border p-4 text-right shadow-sm transition ${
                   selectedLessonId === lesson.id
-                    ? "border-de-red bg-de-red/5"
-                    : "border-line bg-surface hover:border-de-black"
+                    ? "border-de-red bg-gradient-to-br from-surface-rose to-white shadow-de-red/10"
+                    : "border-line bg-white hover:border-de-gold hover:bg-surface-warm"
                 }`}
               >
                 <span className="text-xs font-bold text-de-red">Lektion {lesson.number}</span>
@@ -726,24 +737,26 @@ export default function App() {
           </div>
         </section>
 
-        <section className="mt-14 border-t border-line pb-16 pt-10">
+        <section className="mt-12 pb-16">
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-de-red">Quiz</p>
               <h2 className="mt-2 font-display text-2xl font-bold text-de-black">نوع آزمون</h2>
             </div>
-            <span className="text-xs text-muted">Lektion {selectedLesson?.number ?? 1}</span>
+            <span className="rounded-full bg-de-gold/50 px-3 py-1 text-xs font-bold text-de-black">
+              Lektion {selectedLesson?.number ?? 1}
+            </span>
           </div>
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-3">
             {quizModes.map((mode) => (
               <button
                 key={mode.category}
                 onClick={() => void startQuiz(mode.category)}
                 disabled={quizLoading}
-                className="group border border-line bg-surface p-5 text-right transition hover:border-de-black disabled:cursor-wait"
+                className={`group rounded-[1.75rem] border p-5 text-right shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait ${mode.card}`}
               >
                 <span
-                  className={`inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-wider ${mode.accent}`}
+                  className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${mode.accent}`}
                 >
                   {mode.subtitle}
                 </span>
@@ -764,12 +777,12 @@ export default function App() {
           onMouseDown={() => !quizSubmitting && setQuizOpen(false)}
         >
           <div
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto border border-line bg-surface p-6 shadow-2xl sm:p-8"
+            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-line bg-surface p-6 shadow-2xl sm:p-8"
             onMouseDown={(event) => event.stopPropagation()}
           >
             {quizResult ? (
               <div className="text-center">
-                <div className="de-flag mx-auto h-16 w-12" aria-hidden>
+                <div className="de-flag mx-auto h-16 w-12 rounded-2xl shadow-md" aria-hidden>
                   <span /><span /><span />
                 </div>
                 <p className="mt-5 text-xs font-bold uppercase tracking-wider text-de-red">
@@ -786,10 +799,10 @@ export default function App() {
                   {quizResult.answers.map((answer, index) => (
                     <div
                       key={answer.questionId}
-                      className={`border p-4 ${
+                      className={`rounded-3xl border p-4 ${
                         answer.isCorrect
-                          ? "border-de-gold/60 bg-de-gold/10"
-                          : "border-de-red/30 bg-de-red/5"
+                          ? "border-de-gold/60 bg-surface-warm"
+                          : "border-de-rose/40 bg-surface-rose"
                       }`}
                     >
                       <p className="text-sm font-bold text-de-black" dir="ltr">
@@ -813,7 +826,7 @@ export default function App() {
                 </div>
                 <button
                   onClick={() => setQuizOpen(false)}
-                  className="mt-7 bg-de-black px-6 py-3 text-sm font-bold text-white"
+                  className="mt-7 rounded-2xl bg-de-black px-6 py-3 text-sm font-bold text-white"
                 >
                   بازگشت
                 </button>
@@ -837,15 +850,15 @@ export default function App() {
                     ×
                   </button>
                 </div>
-                <div className="mt-5 h-1 overflow-hidden bg-line">
+                <div className="mt-5 h-2 overflow-hidden rounded-full bg-line">
                   <div
-                    className="h-full bg-de-red transition-all"
+                    className="h-full rounded-full bg-gradient-to-l from-de-red to-de-gold transition-all"
                     style={{
                       width: `${((quizIndex + 1) / quizQuestions.length) * 100}%`,
                     }}
                   />
                 </div>
-                <div className="mt-8 border border-line bg-background p-5 sm:p-7">
+                <div className="mt-8 rounded-[1.75rem] border border-line bg-gradient-to-b from-de-cream to-background p-5 sm:p-7">
                   <p
                     className="text-center text-xl font-bold leading-9 text-de-black"
                     dir="ltr"
@@ -859,10 +872,10 @@ export default function App() {
                         <button
                           key={option}
                           onClick={() => selectAnswer(option)}
-                          className={`border px-4 py-3.5 text-center text-base font-semibold transition ${
+                          className={`rounded-2xl border px-4 py-3.5 text-center text-base font-semibold transition ${
                             selected
-                              ? "border-de-black bg-de-black text-white"
-                              : "border-line bg-surface text-de-black hover:border-de-red"
+                              ? "border-de-black bg-de-black text-white shadow-md"
+                              : "border-line bg-white text-de-black hover:border-de-red hover:bg-surface-rose"
                           }`}
                           dir="ltr"
                         >
@@ -873,14 +886,14 @@ export default function App() {
                   </div>
                 </div>
                 {quizError && (
-                  <p className="mt-4 border border-de-red/30 bg-de-red/5 px-3 py-2 text-center text-xs font-semibold text-de-red">
+                  <p className="mt-4 rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-center text-xs font-semibold text-de-red">
                     {quizError}
                   </p>
                 )}
                 <div className="mt-6 flex items-center justify-between gap-3">
                   <button
                     onClick={() => setQuizOpen(false)}
-                    className="border border-line px-4 py-3 text-sm font-semibold text-muted"
+                    className="rounded-2xl border border-line px-4 py-3 text-sm font-semibold text-muted"
                   >
                     انصراف
                   </button>
@@ -888,7 +901,7 @@ export default function App() {
                     <button
                       onClick={nextQuestion}
                       disabled={!quizAnswers[activeQuestion.id]}
-                      className="bg-de-red px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
+                      className="rounded-2xl bg-de-red px-5 py-3 text-sm font-bold text-white shadow-md shadow-de-red/20 disabled:opacity-40"
                     >
                       بعدی
                     </button>
@@ -896,7 +909,7 @@ export default function App() {
                     <button
                       onClick={() => void submitQuiz()}
                       disabled={!quizAnswers[activeQuestion.id] || quizSubmitting}
-                      className="bg-de-black px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
+                      className="rounded-2xl bg-de-black px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
                     >
                       {quizSubmitting ? "ثبت..." : "ثبت آزمون"}
                     </button>
@@ -914,10 +927,10 @@ export default function App() {
           onMouseDown={() => setAuthOpen(false)}
         >
           <div
-            className="w-full max-w-md border border-line bg-surface p-6 shadow-2xl"
+            className="w-full max-w-md rounded-[2rem] border border-line bg-surface p-6 shadow-2xl"
             onMouseDown={(event) => event.stopPropagation()}
           >
-            <div className="de-flag mb-5 h-1.5 w-full" aria-hidden>
+            <div className="de-flag mb-5 h-2 w-full rounded-full" aria-hidden>
               <span /><span /><span />
             </div>
             <div className="flex items-start justify-between">
@@ -938,7 +951,7 @@ export default function App() {
                   value={displayName}
                   onChange={(event) => setDisplayName(event.target.value)}
                   placeholder="نام نمایشی"
-                  className="w-full border border-line bg-background px-4 py-3 text-sm outline-none focus:border-de-black"
+                  className="w-full rounded-2xl border border-line bg-de-cream px-4 py-3 text-sm outline-none focus:border-de-gold"
                 />
               )}
               <input
@@ -947,7 +960,7 @@ export default function App() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="ایمیل"
-                className="w-full border border-line bg-background px-4 py-3 text-sm outline-none focus:border-de-black"
+                className="w-full rounded-2xl border border-line bg-de-cream px-4 py-3 text-sm outline-none focus:border-de-gold"
               />
               <input
                 required
@@ -956,16 +969,16 @@ export default function App() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="رمز عبور (حداقل ۸ کاراکتر)"
-                className="w-full border border-line bg-background px-4 py-3 text-sm outline-none focus:border-de-black"
+                className="w-full rounded-2xl border border-line bg-de-cream px-4 py-3 text-sm outline-none focus:border-de-gold"
               />
               {authError && (
-                <p className="border border-de-red/30 bg-de-red/5 px-3 py-2 text-xs font-semibold text-de-red">
+                <p className="rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-xs font-semibold text-de-red">
                   {authError}
                 </p>
               )}
               <button
                 disabled={authLoading}
-                className="w-full bg-de-red px-4 py-3.5 text-sm font-bold text-white disabled:opacity-60"
+                className="w-full rounded-2xl bg-de-red px-4 py-3.5 text-sm font-bold text-white shadow-md shadow-de-red/25 disabled:opacity-60"
               >
                 {authLoading
                   ? "در حال ارسال..."
