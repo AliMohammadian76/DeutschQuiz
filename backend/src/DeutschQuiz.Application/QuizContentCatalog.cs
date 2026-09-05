@@ -297,6 +297,30 @@ public static class QuizContentCatalog
             "Hueber",
             MenschenA12QuizContentCatalog.Lessons),
         new(
+            Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd"),
+            "Menschen",
+            "A2.1",
+            "Hueber",
+            MenschenA21QuizContentCatalog.Lessons),
+        new(
+            Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"),
+            "Menschen",
+            "A2.2",
+            "Hueber",
+            MenschenA22QuizContentCatalog.Lessons),
+        new(
+            Guid.Parse("f1f1f1f1-f1f1-f1f1-f1f1-f1f1f1f1f1f1"),
+            "Menschen",
+            "B1.1",
+            "Hueber",
+            MenschenB11QuizContentCatalog.Lessons),
+        new(
+            Guid.Parse("f2f2f2f2-f2f2-f2f2-f2f2-f2f2f2f2f2f2"),
+            "Menschen",
+            "B1.2",
+            "Hueber",
+            MenschenB12QuizContentCatalog.Lessons),
+        new(
             Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
             "Starten wir!",
             "A1.1",

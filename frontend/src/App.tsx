@@ -106,6 +106,16 @@ type AttemptHistoryItem = {
   completedAtUtc: string | null;
 };
 
+const levelOrder = ["A1.1", "A1.2", "A2.1", "A2.2", "B1.1", "B1.2"];
+
+function sortLevels(levels: string[]) {
+  return [...levels].sort(
+    (a, b) =>
+      (levelOrder.indexOf(a) === -1 ? 999 : levelOrder.indexOf(a)) -
+      (levelOrder.indexOf(b) === -1 ? 999 : levelOrder.indexOf(b)),
+  );
+}
+
 const defaultLessonId = "11111111-1111-1111-1111-111111111111";
 
 async function getError(response: Response) {
@@ -376,14 +386,16 @@ export default function App() {
     }, new Map<string, string[]>()),
   ).map(([name, levels]) => ({
     name,
-    levels: [...levels].sort(),
+    levels: sortLevels(levels),
   }));
   const selectedBookLevels =
     bookOptions.find((book) => book.name === selectedBook)?.levels ?? [];
-  const bookLessons = lessons.filter(
-    (lesson) =>
-      lesson.book === selectedBook && lesson.level === selectedLevel,
-  );
+  const bookLessons = lessons
+    .filter(
+      (lesson) =>
+        lesson.book === selectedBook && lesson.level === selectedLevel,
+    )
+    .sort((a, b) => a.number - b.number);
   const selectedBookProgress = progress?.lessons.filter(
     (lesson) =>
       lesson.book === selectedBook && lesson.level === selectedLevel,
