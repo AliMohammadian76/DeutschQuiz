@@ -410,6 +410,11 @@ export default function App() {
     (lesson) =>
       lesson.book === selectedBook && lesson.level === selectedLevel,
   ) ?? [];
+  const completedLessonIds = new Set(
+    selectedBookProgress
+      .filter((lesson) => lesson.attemptsCount > 0)
+      .map((lesson) => lesson.lessonId),
+  );
 
   function selectBook(bookName: string) {
     setSelectedBook(bookName);
@@ -789,12 +794,18 @@ export default function App() {
                 key={lesson.id}
                 onClick={() => setSelectedLessonId(lesson.id)}
                 className={`rounded-3xl border p-4 shadow-sm transition ${textAlign} ${
-                  selectedLessonId === lesson.id
-                    ? "border-de-red bg-gradient-to-br from-surface-rose to-white shadow-de-red/10"
-                    : "border-line bg-white hover:border-de-gold hover:bg-surface-warm"
+                  completedLessonIds.has(lesson.id)
+                    ? selectedLessonId === lesson.id
+                      ? "border-emerald-600 bg-gradient-to-br from-emerald-100 to-white shadow-emerald-900/10"
+                      : "border-emerald-300 bg-gradient-to-br from-emerald-50 to-white hover:border-emerald-500"
+                    : selectedLessonId === lesson.id
+                      ? "border-de-red bg-gradient-to-br from-surface-rose to-white shadow-de-red/10"
+                      : "border-line bg-white hover:border-de-gold hover:bg-surface-warm"
                 }`}
               >
-                <span className="text-xs font-bold text-de-red">Lektion {lesson.number}</span>
+                <span className={`text-xs font-bold ${completedLessonIds.has(lesson.id) ? "text-emerald-700" : "text-de-red"}`}>
+                  {completedLessonIds.has(lesson.id) ? "✓ " : ""}Lektion {lesson.number}
+                </span>
                 <p className="mt-2 text-sm font-bold text-de-black" dir="ltr">
                   {lesson.title}
                 </p>
