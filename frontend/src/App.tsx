@@ -34,6 +34,7 @@ const quizModeMeta = [
 ] as const;
 
 type AuthMode = "login" | "register";
+type AppPage = "quizzes" | "progress" | "history";
 type QuizCategory = (typeof quizModeMeta)[number]["category"];
 type AuthResult = { accessToken: string; user: { displayName: string } };
 type QuizQuestion = {
@@ -165,6 +166,7 @@ export default function App() {
   const [quizSubmitting, setQuizSubmitting] = useState(false);
   const [quizError, setQuizError] = useState("");
   const [quizResult, setQuizResult] = useState<AttemptResult | null>(null);
+  const [activePage, setActivePage] = useState<AppPage>("quizzes");
 
   useEffect(() => {
     document.documentElement.lang = uiLanguage;
@@ -186,7 +188,7 @@ export default function App() {
   async function loadHistory(accessToken: string) {
     setHistoryLoading(true);
     try {
-      const response = await fetch(`${apiBaseUrl}/progress/history?limit=40`, {
+      const response = await fetch(`${apiBaseUrl}/progress/history?limit=500`, {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (response.ok) setHistory(await response.json());
@@ -435,6 +437,9 @@ export default function App() {
   }
 
   const textAlign = uiLanguage === "en" ? "text-left" : "text-right";
+  const pageLabels = uiLanguage === "fa"
+    ? { quizzes: "آزمون‌ها", progress: "پیشرفت", history: "تاریخچه آزمون‌ها" }
+    : { quizzes: "Quizzes", progress: "Progress", history: "Quiz history" };
 
   return (
     <main className="min-h-screen">
@@ -456,6 +461,17 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <nav className="flex items-center gap-1 rounded-full border border-line bg-de-cream p-1" aria-label="Main navigation">
+              {(["quizzes", "progress", "history"] as const).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => setActivePage(page)}
+                  className={`rounded-full px-3 py-2 text-xs font-bold transition ${activePage === page ? "bg-de-black text-white" : "text-muted hover:bg-white"}`}
+                >
+                  {pageLabels[page]}
+                </button>
+              ))}
+            </nav>
             {SHOW_LANGUAGE_SWITCHER && (
               <button
                 onClick={() => setLanguage(language === "fa" ? "en" : "fa")}
@@ -512,7 +528,7 @@ export default function App() {
           </div>
         </section>
 
-        {progress && (
+        {activePage !== "quizzes" && progress && (
           <section className="mt-12 grid gap-3 sm:grid-cols-4">
             {(
               [
@@ -530,7 +546,7 @@ export default function App() {
           </section>
         )}
 
-        {token && progress && (
+        {activePage === "progress" && token && progress && (
           <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -546,31 +562,39 @@ export default function App() {
               </span>
             </div>
             <div className="mt-6">
-              <UserProgressChart
-                attempts={history.filter(
-                  (attempt) =>
-                    attempt.book === selectedBook &&
-                    attempt.level === selectedLevel,
-                )}
-                lessons={selectedBookProgress.map((lesson) => ({
-                  lessonId: lesson.lessonId,
-                  lessonNumber: lesson.lessonNumber,
-                  title: lesson.title,
-                  averageScore: lesson.averageScore,
-                  bestScore: lesson.bestScore,
-                }))}
-                scoreLabel={t.chartScore}
-                averageLabel={t.chartAverage}
-                bestLabel={t.chartBest}
-                emptyLabel={t.chartEmpty}
-                locale={localeFor(uiLanguage)}
-                rtl={uiLanguage === "fa"}
-              />
+              <div className="grid gap-4 lg:grid-cols-3">
+                {quizModeMeta.map((mode) => {
+                  const categoryAttempts = history.filter(
+                    (attempt) =>
+                      attempt.book === selectedBook &&
+                      attempt.level === selectedLevel &&
+                      attempt.category === mode.category,
+                  );
+                  return (
+                    <article key={mode.category} className="rounded-3xl border border-line bg-gradient-to-br from-white to-de-mist p-3">
+                      <div className="flex items-center justify-between px-2 pt-1">
+                        <h3 className="font-display text-lg font-bold text-de-black">{categoryLabel(mode.category)}</h3>
+                        <span className="text-xs text-muted">{categoryAttempts.length}</span>
+                      </div>
+                      <UserProgressChart
+                        attempts={categoryAttempts}
+                        lessons={[]}
+                        scoreLabel={t.chartScore}
+                        averageLabel={t.chartAverage}
+                        bestLabel={t.chartBest}
+                        emptyLabel={t.chartEmpty}
+                        locale={localeFor(uiLanguage)}
+                        rtl={uiLanguage === "fa"}
+                      />
+                    </article>
+                  );
+                })}
+              </div>
             </div>
           </section>
         )}
 
-        {token && progress && (
+        {activePage === "progress" && token && progress && (
           <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
@@ -625,7 +649,7 @@ export default function App() {
           </section>
         )}
 
-        {token && (
+        {activePage === "history" && token && (
           <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
             <div className="flex items-center justify-between gap-4">
               <div>
@@ -697,7 +721,7 @@ export default function App() {
           </section>
         )}
 
-        <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
+        {activePage === "quizzes" && <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
           <p className="text-xs font-bold uppercase tracking-wider text-de-red">Lehrwerk</p>
           <h2 className="mt-2 font-display text-2xl font-bold text-de-black">{t.pickBook}</h2>
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -777,9 +801,9 @@ export default function App() {
               </button>
             ))}
           </div>
-        </section>
+        </section>}
 
-        <section className="mt-12 pb-16">
+        {activePage === "quizzes" && <section className="mt-12 pb-16">
           <div className="mb-6 flex items-end justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-de-red">Quiz</p>
@@ -815,7 +839,7 @@ export default function App() {
               );
             })}
           </div>
-        </section>
+        </section>}
       </div>
 
       {quizOpen && activeQuestion && (

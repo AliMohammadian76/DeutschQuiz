@@ -206,7 +206,7 @@ export function UserProgressChart({
                 ],
               },
               tooltip: {
-                valueFormatter: (value) => `${value}%`,
+                valueFormatter: (value: unknown) => `${value}%`,
               },
             },
           ]
@@ -225,7 +225,7 @@ export function UserProgressChart({
                 borderRadius: [8, 8, 0, 0],
               },
               tooltip: {
-                valueFormatter: (value) => `${value}%`,
+                valueFormatter: (value: unknown) => `${value}%`,
               },
             },
             {
@@ -240,7 +240,7 @@ export function UserProgressChart({
                 borderRadius: [8, 8, 0, 0],
               },
               tooltip: {
-                valueFormatter: (value) => `${value}%`,
+                valueFormatter: (value: unknown) => `${value}%`,
               },
             },
           ]

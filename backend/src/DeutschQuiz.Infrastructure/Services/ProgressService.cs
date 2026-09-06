@@ -171,7 +171,7 @@ public sealed class ProgressService(QuizDbContext db) : IProgressService
         int limit = 20,
         CancellationToken cancellationToken = default)
     {
-        var safeLimit = Math.Clamp(limit, 1, 100);
+        var safeLimit = Math.Clamp(limit, 1, 500);
 
         return await db.QuizAttempts
             .AsNoTracking()
