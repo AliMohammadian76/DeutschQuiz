@@ -180,6 +180,11 @@ export default function App() {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (response.ok) setProgress(await response.json());
+      else if (response.status === 401) {
+        localStorage.removeItem("deutschquiz.accessToken");
+        setToken(null);
+        setProgress(null);
+      }
     } finally {
       setProgressLoading(false);
     }
@@ -192,6 +197,11 @@ export default function App() {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
       if (response.ok) setHistory(await response.json());
+      else if (response.status === 401) {
+        localStorage.removeItem("deutschquiz.accessToken");
+        setToken(null);
+        setHistory([]);
+      }
     } finally {
       setHistoryLoading(false);
     }
@@ -277,6 +287,20 @@ export default function App() {
           answers,
         }),
       });
+      if (response.status === 401) {
+        localStorage.removeItem("deutschquiz.accessToken");
+        localStorage.removeItem("deutschquiz.displayName");
+        setToken(null);
+        setUserName("");
+        setQuizError(
+          uiLanguage === "fa"
+            ? "جلسهٔ ورود منقضی شد؛ لطفاً دوباره وارد شوید."
+            : "Your session expired. Please log in again.",
+        );
+        setQuizOpen(false);
+        openAuth("login");
+        return;
+      }
       if (!response.ok) throw new Error(await getError(response, t.requestFailed));
       const result = (await response.json()) as AttemptResult;
       setQuizResult(result);
@@ -410,10 +434,24 @@ export default function App() {
     (lesson) =>
       lesson.book === selectedBook && lesson.level === selectedLevel,
   ) ?? [];
+  function hasCompletedSection(lessonId: string, category: QuizCategory) {
+    return history.some(
+      (attempt) => attempt.lessonId === lessonId && attempt.category === category,
+    );
+  }
+
+  const isLessonComplete = (lessonId: string) =>
+    quizModeMeta.every((mode) => hasCompletedSection(lessonId, mode.category));
   const completedLessonIds = new Set(
-    selectedBookProgress
-      .filter((lesson) => lesson.attemptsCount > 0)
-      .map((lesson) => lesson.lessonId),
+    lessons.filter((lesson) => isLessonComplete(lesson.id)).map((lesson) => lesson.id),
+  );
+  const completedBookNames = new Set(
+    bookOptions
+      .filter((book) => {
+        const bookLessonIds = lessons.filter((lesson) => lesson.book === book.name).map((lesson) => lesson.id);
+        return bookLessonIds.length > 0 && bookLessonIds.every((lessonId) => completedLessonIds.has(lessonId));
+      })
+      .map((book) => book.name),
   );
 
   function selectBook(bookName: string) {
@@ -735,13 +773,17 @@ export default function App() {
                 key={book.name}
                 onClick={() => selectBook(book.name)}
                 className={`rounded-3xl border p-5 shadow-sm transition ${textAlign} ${
-                  selectedBook === book.name
+                  completedBookNames.has(book.name)
+                    ? selectedBook === book.name
+                      ? "border-emerald-600 bg-gradient-to-br from-emerald-700 to-emerald-900 text-white"
+                      : "border-emerald-300 bg-gradient-to-br from-emerald-50 to-white text-de-black hover:border-emerald-500"
+                    : selectedBook === book.name
                     ? "border-de-black bg-gradient-to-br from-de-black to-surface-ink text-white"
                     : "border-line bg-gradient-to-br from-white to-de-cream text-de-black hover:border-de-red"
                 }`}
               >
                 <p className="font-display text-xl font-bold" dir="ltr">
-                  {book.name}
+                  {completedBookNames.has(book.name) ? "✓ " : ""}{book.name}
                 </p>
                 <p
                   className={`mt-2 text-xs ${selectedBook === book.name ? "text-de-gold" : "text-muted"}`}
@@ -829,17 +871,18 @@ export default function App() {
           <div className="grid gap-4 md:grid-cols-3">
             {quizModeMeta.map((mode) => {
               const copy = t.quizModes[mode.category];
+              const sectionCompleted = token && hasCompletedSection(selectedLessonId, mode.category);
               return (
                 <button
                   key={mode.category}
                   onClick={() => void startQuiz(mode.category)}
                   disabled={quizLoading}
-                  className={`group rounded-[1.75rem] border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait ${textAlign} ${mode.card}`}
+                  className={`group rounded-[1.75rem] border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait ${textAlign} ${sectionCompleted ? "border-emerald-400 bg-gradient-to-br from-emerald-50 to-white" : mode.card}`}
                 >
                   <span
-                    className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${mode.accent}`}
+                    className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${sectionCompleted ? "bg-emerald-600 text-white" : mode.accent}`}
                   >
-                    {mode.subtitle}
+                    {sectionCompleted ? `✓ ${mode.subtitle}` : mode.subtitle}
                   </span>
                   <h3 className="mt-4 text-lg font-bold text-de-black">{copy.title}</h3>
                   <p className="mt-2 text-sm leading-7 text-muted">{copy.description}</p>
