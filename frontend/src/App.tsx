@@ -44,6 +44,7 @@ const quizModeMeta = [
 
 type AuthMode = "login" | "register";
 type AppPage = "quizzes" | "progress" | "history" | "quiz";
+type QuizPickerStep = "book" | "level" | "lesson" | "mode";
 type AuthResult = { accessToken: string; user: { displayName: string } };
 type Lesson = {
   id: string;
@@ -167,6 +168,7 @@ export default function App() {
   const [quizError, setQuizError] = useState("");
   const [quizResult, setQuizResult] = useState<AttemptResult | null>(null);
   const [activePage, setActivePage] = useState<AppPage>("quizzes");
+  const [pickerStep, setPickerStep] = useState<QuizPickerStep>("book");
 
   useEffect(() => {
     document.documentElement.lang = uiLanguage;
@@ -547,6 +549,7 @@ export default function App() {
       (lesson) => lesson.book === bookName && lesson.level === nextLevel,
     );
     if (firstLesson) setSelectedLessonId(firstLesson.id);
+    setPickerStep(levels.length > 1 ? "level" : "lesson");
   }
 
   function selectLevel(level: string) {
@@ -555,6 +558,32 @@ export default function App() {
       (lesson) => lesson.book === selectedBook && lesson.level === level,
     );
     if (firstLesson) setSelectedLessonId(firstLesson.id);
+    setPickerStep("lesson");
+  }
+
+  function selectLesson(lessonId: string) {
+    setSelectedLessonId(lessonId);
+    setPickerStep("mode");
+  }
+
+  function goToPickerStep(step: QuizPickerStep) {
+    setPickerStep(step);
+  }
+
+  function stepBack() {
+    if (pickerStep === "mode") {
+      setPickerStep("lesson");
+      return;
+    }
+    if (pickerStep === "lesson") {
+      const levels =
+        bookOptions.find((book) => book.name === selectedBook)?.levels ?? [];
+      setPickerStep(levels.length > 1 ? "level" : "book");
+      return;
+    }
+    if (pickerStep === "level") {
+      setPickerStep("book");
+    }
   }
 
   function categoryLabel(category: QuizCategory) {
@@ -634,7 +663,8 @@ export default function App() {
           </div>
         </header>
 
-        {activePage !== "quiz" && (
+        {((activePage === "quizzes" && pickerStep === "book") ||
+          (activePage !== "quizzes" && activePage !== "quiz")) && (
         <section className="mt-10 grid items-stretch gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <div
             className="animate-rise relative z-10 self-center rounded-[2rem] border border-line bg-gradient-to-br from-surface via-de-cream to-surface-warm p-6 shadow-sm sm:p-8"
@@ -854,162 +884,254 @@ export default function App() {
           </section>
         )}
 
-        {activePage === "quizzes" && <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
-          <p className="text-xs font-bold uppercase tracking-wider text-de-red">Lehrwerk</p>
-          <h2 className="mt-2 font-display text-2xl font-bold text-de-black">{t.pickBook}</h2>
-          <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            {bookOptions.map((book) => (
-              <button
-                key={book.name}
-                onClick={() => selectBook(book.name)}
-                className={`rounded-3xl border p-5 shadow-sm transition ${textAlign} ${
-                  completedBookNames.has(book.name)
-                    ? selectedBook === book.name
-                      ? "border-emerald-600 bg-gradient-to-br from-emerald-700 to-emerald-900 text-white"
-                      : "border-emerald-300 bg-gradient-to-br from-emerald-50 to-white text-de-black hover:border-emerald-500"
-                    : selectedBook === book.name
-                    ? "border-de-black bg-gradient-to-br from-de-black to-surface-ink text-white"
-                    : "border-line bg-gradient-to-br from-white to-de-cream text-de-black hover:border-de-red"
-                }`}
-              >
-                <p className="font-display text-xl font-bold" dir="ltr">
-                  {completedBookNames.has(book.name) ? "✓ " : ""}{book.name}
-                </p>
-                <p
-                  className={`mt-2 text-xs ${selectedBook === book.name ? "text-de-gold" : "text-muted"}`}
-                >
-                  {book.levels.join(" · ")}
-                </p>
-              </button>
-            ))}
-          </div>
-          {selectedBookLevels.length > 1 && (
-            <div className="mt-5 flex flex-wrap gap-2">
-              {selectedBookLevels.map((level) => (
+        {activePage === "quizzes" && (
+          <section className="mt-12 pb-16">
+            {pickerStep !== "book" && (
+              <div className="mb-5 flex flex-wrap items-center gap-2">
                 <button
-                  key={level}
-                  onClick={() => selectLevel(level)}
-                  className={`rounded-full px-4 py-2 text-xs font-bold transition ${
-                    selectedLevel === level
-                      ? "bg-de-gold text-de-black shadow-md shadow-de-gold/40"
-                      : "border border-line bg-white text-muted hover:border-de-amber hover:bg-surface-warm"
-                  }`}
-                  dir="ltr"
+                  onClick={stepBack}
+                  className="rounded-full border border-line bg-surface px-4 py-2 text-xs font-semibold text-muted hover:bg-de-mist"
                 >
-                  {level}
+                  {t.stepBack}
                 </button>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-10 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-de-red">Lektion</p>
-              <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
-                {t.pickLessonHeading}
-              </h2>
-            </div>
-            <span className="rounded-full bg-de-mist px-3 py-1 text-xs text-muted">
-              {lessonsLoading
-                ? t.fetching
-                : t.lessonsMeta(bookLessons.length, selectedBook, selectedLevel)}
-            </span>
-          </div>
-          {lessonsError && (
-            <p className="mt-4 rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-sm font-semibold text-de-red">
-              {lessonsError}
-            </p>
-          )}
-          <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {bookLessons.map((lesson) => (
-              <button
-                key={lesson.id}
-                onClick={() => setSelectedLessonId(lesson.id)}
-                className={`rounded-3xl border p-4 shadow-sm transition ${textAlign} ${
-                  completedLessonIds.has(lesson.id)
-                    ? selectedLessonId === lesson.id
-                      ? "border-emerald-600 bg-gradient-to-br from-emerald-100 to-white shadow-emerald-900/10"
-                      : "border-emerald-300 bg-gradient-to-br from-emerald-50 to-white hover:border-emerald-500"
-                    : selectedLessonId === lesson.id
-                      ? "border-de-red bg-gradient-to-br from-surface-rose to-white shadow-de-red/10"
-                      : "border-line bg-white hover:border-de-gold hover:bg-surface-warm"
-                }`}
-              >
-                <span className={`text-xs font-bold ${completedLessonIds.has(lesson.id) ? "text-emerald-700" : "text-de-red"}`}>
-                  {completedLessonIds.has(lesson.id) ? "✓ " : ""}Lektion {lesson.number}
-                </span>
-                <p className="mt-2 text-sm font-bold text-de-black" dir="ltr">
-                  {lesson.title}
-                </p>
-              </button>
-            ))}
-          </div>
-        </section>}
-
-        {activePage === "quizzes" && <section className="mt-12 pb-16">
-          <div className="mb-6 flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-de-red">Quiz</p>
-              <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
-                {t.quizTypeHeading}
-              </h2>
-            </div>
-            <span className="rounded-full bg-de-gold/50 px-3 py-1 text-xs font-bold text-de-black">
-              Lektion {selectedLesson?.number ?? 1}
-            </span>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {quizModeMeta.map((mode) => {
-              const copy = t.quizModes[mode.category];
-              const sectionCompleted = token && hasCompletedSection(selectedLessonId, mode.category);
-              const sectionInProgress = draftMatches(
-                quizDraft,
-                selectedLessonId,
-                mode.category,
-              );
-              return (
-                <button
-                  key={mode.category}
-                  onClick={() => openOrResumeQuiz(mode.category)}
-                  disabled={quizLoading}
-                  className={`group rounded-[1.75rem] border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait ${textAlign} ${
-                    sectionInProgress
-                      ? "border-de-amber bg-gradient-to-br from-surface-warm to-white"
-                      : sectionCompleted
-                        ? "border-emerald-400 bg-gradient-to-br from-emerald-50 to-white"
-                        : mode.card
-                  }`}
+                <nav
+                  className="flex flex-wrap items-center gap-1 text-xs font-semibold text-muted"
+                  aria-label="Quiz picker path"
                 >
-                  <span
-                    className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                      sectionInProgress
-                        ? "bg-de-amber text-de-black"
-                        : sectionCompleted
-                          ? "bg-emerald-600 text-white"
-                          : mode.accent
-                    }`}
+                  <button
+                    onClick={() => goToPickerStep("book")}
+                    className="rounded-full px-2 py-1 hover:bg-de-mist hover:text-de-black"
+                    dir="ltr"
                   >
-                    {sectionInProgress
-                      ? t.inProgress
-                      : sectionCompleted
-                        ? `✓ ${mode.subtitle}`
-                        : mode.subtitle}
-                  </span>
-                  <h3 className="mt-4 text-lg font-bold text-de-black">{copy.title}</h3>
-                  <p className="mt-2 text-sm leading-7 text-muted">{copy.description}</p>
-                  <div className="mt-5 text-sm font-bold text-de-red group-hover:underline">
-                    {sectionInProgress ? t.continueQuiz : t.start}
+                    {selectedBook}
+                  </button>
+                  {(pickerStep === "level" ||
+                    pickerStep === "lesson" ||
+                    pickerStep === "mode") &&
+                    selectedBookLevels.length > 1 && (
+                      <>
+                        <span aria-hidden>›</span>
+                        <button
+                          onClick={() => goToPickerStep("level")}
+                          className="rounded-full px-2 py-1 hover:bg-de-mist hover:text-de-black"
+                          dir="ltr"
+                        >
+                          {selectedLevel}
+                        </button>
+                      </>
+                    )}
+                  {(pickerStep === "lesson" || pickerStep === "mode") &&
+                    selectedBookLevels.length <= 1 && (
+                      <>
+                        <span aria-hidden>›</span>
+                        <span className="rounded-full px-2 py-1" dir="ltr">
+                          {selectedLevel}
+                        </span>
+                      </>
+                    )}
+                  {(pickerStep === "lesson" || pickerStep === "mode") && (
+                    <>
+                      <span aria-hidden>›</span>
+                      {pickerStep === "mode" ? (
+                        <button
+                          onClick={() => goToPickerStep("lesson")}
+                          className="rounded-full px-2 py-1 hover:bg-de-mist hover:text-de-black"
+                          dir="ltr"
+                        >
+                          Lektion {selectedLesson?.number ?? 1}
+                        </button>
+                      ) : (
+                        <span className="rounded-full px-2 py-1 text-de-black">
+                          {t.pickLessonHeading}
+                        </span>
+                      )}
+                    </>
+                  )}
+                  {pickerStep === "mode" && (
+                    <>
+                      <span aria-hidden>›</span>
+                      <span className="rounded-full px-2 py-1 text-de-black">
+                        {t.quizTypeHeading}
+                      </span>
+                    </>
+                  )}
+                </nav>
+              </div>
+            )}
+
+            {pickerStep === "book" && (
+              <div className="rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
+                <p className="text-xs font-bold uppercase tracking-wider text-de-red">Lehrwerk</p>
+                <h2 className="mt-2 font-display text-2xl font-bold text-de-black">{t.pickBook}</h2>
+                {lessonsError && (
+                  <p className="mt-4 rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-sm font-semibold text-de-red">
+                    {lessonsError}
+                  </p>
+                )}
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {bookOptions.map((book) => (
+                    <button
+                      key={book.name}
+                      onClick={() => selectBook(book.name)}
+                      className={`rounded-3xl border p-5 shadow-sm transition ${textAlign} ${
+                        completedBookNames.has(book.name)
+                          ? "border-emerald-300 bg-gradient-to-br from-emerald-50 to-white text-de-black hover:border-emerald-500"
+                          : "border-line bg-gradient-to-br from-white to-de-cream text-de-black hover:border-de-red"
+                      }`}
+                    >
+                      <p className="font-display text-xl font-bold" dir="ltr">
+                        {completedBookNames.has(book.name) ? "✓ " : ""}
+                        {book.name}
+                      </p>
+                      <p className="mt-2 text-xs text-muted" dir="ltr">
+                        {book.levels.join(" · ")}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+                {lessonsLoading && (
+                  <p className="mt-4 text-center text-sm text-muted">{t.fetching}</p>
+                )}
+              </div>
+            )}
+
+            {pickerStep === "level" && (
+              <div className="rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
+                <p className="text-xs font-bold uppercase tracking-wider text-de-red">Niveau</p>
+                <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                  {t.pickLevelHeading}
+                </h2>
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {selectedBookLevels.map((level) => (
+                    <button
+                      key={level}
+                      onClick={() => selectLevel(level)}
+                      className="rounded-3xl border border-line bg-gradient-to-br from-white to-de-cream p-5 text-de-black shadow-sm transition hover:border-de-gold hover:bg-surface-warm"
+                    >
+                      <p className="font-display text-2xl font-bold" dir="ltr">
+                        {level}
+                      </p>
+                      <p className="mt-2 text-xs text-muted">{t.levelLabel(level)}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {pickerStep === "lesson" && (
+              <div className="rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-de-red">Lektion</p>
+                    <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                      {t.pickLessonHeading}
+                    </h2>
                   </div>
-                </button>
-              );
-            })}
-          </div>
-          {quizError && activePage === "quizzes" && (
-            <p className="mt-4 rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-center text-xs font-semibold text-de-red">
-              {quizError}
-            </p>
-          )}
-        </section>}
+                  <span className="rounded-full bg-de-mist px-3 py-1 text-xs text-muted">
+                    {lessonsLoading
+                      ? t.fetching
+                      : t.lessonsMeta(bookLessons.length, selectedBook, selectedLevel)}
+                  </span>
+                </div>
+                <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {bookLessons.map((lesson) => (
+                    <button
+                      key={lesson.id}
+                      onClick={() => selectLesson(lesson.id)}
+                      className={`rounded-3xl border p-4 shadow-sm transition ${textAlign} ${
+                        completedLessonIds.has(lesson.id)
+                          ? "border-emerald-300 bg-gradient-to-br from-emerald-50 to-white hover:border-emerald-500"
+                          : "border-line bg-white hover:border-de-gold hover:bg-surface-warm"
+                      }`}
+                    >
+                      <span
+                        className={`text-xs font-bold ${
+                          completedLessonIds.has(lesson.id)
+                            ? "text-emerald-700"
+                            : "text-de-red"
+                        }`}
+                      >
+                        {completedLessonIds.has(lesson.id) ? "✓ " : ""}
+                        Lektion {lesson.number}
+                      </span>
+                      <p className="mt-2 text-sm font-bold text-de-black" dir="ltr">
+                        {lesson.title}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {pickerStep === "mode" && (
+              <div>
+                <div className="mb-6 flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wider text-de-red">Quiz</p>
+                    <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                      {t.quizTypeHeading}
+                    </h2>
+                  </div>
+                  <span className="rounded-full bg-de-gold/50 px-3 py-1 text-xs font-bold text-de-black">
+                    Lektion {selectedLesson?.number ?? 1}
+                  </span>
+                </div>
+                <div className="grid gap-4 md:grid-cols-3">
+                  {quizModeMeta.map((mode) => {
+                    const copy = t.quizModes[mode.category];
+                    const sectionCompleted =
+                      token && hasCompletedSection(selectedLessonId, mode.category);
+                    const sectionInProgress = draftMatches(
+                      quizDraft,
+                      selectedLessonId,
+                      mode.category,
+                    );
+                    return (
+                      <button
+                        key={mode.category}
+                        onClick={() => openOrResumeQuiz(mode.category)}
+                        disabled={quizLoading}
+                        className={`group rounded-[1.75rem] border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait ${textAlign} ${
+                          sectionInProgress
+                            ? "border-de-amber bg-gradient-to-br from-surface-warm to-white"
+                            : sectionCompleted
+                              ? "border-emerald-400 bg-gradient-to-br from-emerald-50 to-white"
+                              : mode.card
+                        }`}
+                      >
+                        <span
+                          className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                            sectionInProgress
+                              ? "bg-de-amber text-de-black"
+                              : sectionCompleted
+                                ? "bg-emerald-600 text-white"
+                                : mode.accent
+                          }`}
+                        >
+                          {sectionInProgress
+                            ? t.inProgress
+                            : sectionCompleted
+                              ? `✓ ${mode.subtitle}`
+                              : mode.subtitle}
+                        </span>
+                        <h3 className="mt-4 text-lg font-bold text-de-black">{copy.title}</h3>
+                        <p className="mt-2 text-sm leading-7 text-muted">{copy.description}</p>
+                        <div className="mt-5 text-sm font-bold text-de-red group-hover:underline">
+                          {sectionInProgress ? t.continueQuiz : t.start}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {quizError && (
+                  <p className="mt-4 rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-center text-xs font-semibold text-de-red">
+                    {quizError}
+                  </p>
+                )}
+              </div>
+            )}
+          </section>
+        )}
 
         {activePage === "quiz" && (
           <section className="mt-10 pb-16">

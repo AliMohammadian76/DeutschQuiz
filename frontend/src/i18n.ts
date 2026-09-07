@@ -46,7 +46,9 @@ type Messages = {
   dateUnknown: string;
   timeLabel: string;
   pickBook: string;
+  pickLevelHeading: string;
   pickLessonHeading: string;
+  stepBack: string;
   lessonsMeta: (count: number, book: string, level: string) => string;
   quizTypeHeading: string;
   start: string;
@@ -124,7 +126,9 @@ const fa: Messages = {
   dateUnknown: "تاریخ نامشخص",
   timeLabel: "زمان",
   pickBook: "انتخاب کتاب",
+  pickLevelHeading: "انتخاب سطح",
   pickLessonHeading: "انتخاب درس",
+  stepBack: "قبلی",
   lessonsMeta: (count, book, level) => `${count} درس · ${book} ${level}`,
   quizTypeHeading: "نوع آزمون",
   start: "شروع",
@@ -212,7 +216,9 @@ const en: Messages = {
   dateUnknown: "Unknown date",
   timeLabel: "Time",
   pickBook: "Choose a book",
+  pickLevelHeading: "Choose a level",
   pickLessonHeading: "Choose a lesson",
+  stepBack: "Back",
   lessonsMeta: (count, book, level) => `${count} lessons · ${book} ${level}`,
   quizTypeHeading: "Quiz type",
   start: "Start",
