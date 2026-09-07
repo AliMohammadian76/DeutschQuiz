@@ -50,6 +50,10 @@ type Messages = {
   lessonsMeta: (count: number, book: string, level: string) => string;
   quizTypeHeading: string;
   start: string;
+  continueQuiz: string;
+  inProgress: string;
+  exitQuiz: string;
+  resumeHint: string;
   quizModes: {
     Vocabulary: { title: string; description: string };
     Grammar: { title: string; description: string };
@@ -124,6 +128,10 @@ const fa: Messages = {
   lessonsMeta: (count, book, level) => `${count} درس · ${book} ${level}`,
   quizTypeHeading: "نوع آزمون",
   start: "شروع",
+  continueQuiz: "ادامه آزمون",
+  inProgress: "نیمه‌تمام",
+  exitQuiz: "خروج از آزمون",
+  resumeHint: "می‌توانی بعداً از همین‌جا ادامه دهی.",
   quizModes: {
     Vocabulary: {
       title: "واژگان",
@@ -208,6 +216,10 @@ const en: Messages = {
   lessonsMeta: (count, book, level) => `${count} lessons · ${book} ${level}`,
   quizTypeHeading: "Quiz type",
   start: "Start",
+  continueQuiz: "Continue quiz",
+  inProgress: "In progress",
+  exitQuiz: "Exit quiz",
+  resumeHint: "You can continue from here later.",
   quizModes: {
     Vocabulary: {
       title: "Vocabulary",

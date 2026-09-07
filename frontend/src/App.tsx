@@ -7,6 +7,15 @@ import {
   getMessages,
   localeFor,
 } from "./i18n";
+import {
+  clearDraft,
+  draftMatches,
+  loadDraft,
+  saveDraft,
+  type QuizCategory,
+  type QuizDraft,
+  type QuizQuestion,
+} from "./quizDraft";
 import { UserProgressChart } from "./UserProgressChart";
 
 const apiBaseUrl =
@@ -34,17 +43,8 @@ const quizModeMeta = [
 ] as const;
 
 type AuthMode = "login" | "register";
-type AppPage = "quizzes" | "progress" | "history";
-type QuizCategory = (typeof quizModeMeta)[number]["category"];
+type AppPage = "quizzes" | "progress" | "history" | "quiz";
 type AuthResult = { accessToken: string; user: { displayName: string } };
-type QuizQuestion = {
-  id: string;
-  lessonId: string;
-  category: QuizCategory;
-  type: string;
-  prompt: string;
-  options: string[];
-};
 type Lesson = {
   id: string;
   book: string;
@@ -154,7 +154,7 @@ export default function App() {
   const [lessonsError, setLessonsError] = useState("");
   const [history, setHistory] = useState<AttemptHistoryItem[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [quizOpen, setQuizOpen] = useState(false);
+  const [quizDraft, setQuizDraft] = useState<QuizDraft | null>(() => loadDraft());
   const [quizCategory, setQuizCategory] = useState<QuizCategory>("Mixed");
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
   const [quizIndex, setQuizIndex] = useState(0);
@@ -172,6 +172,67 @@ export default function App() {
     document.documentElement.lang = uiLanguage;
     document.documentElement.dir = dirFor(uiLanguage);
   }, [uiLanguage]);
+
+  useEffect(() => {
+    if (activePage !== "quiz" || quizResult || !quizQuestions.length || !quizStartedAt) {
+      return;
+    }
+    const draft: QuizDraft = {
+      lessonId: selectedLessonId,
+      category: quizCategory,
+      questions: quizQuestions,
+      answers: quizAnswers,
+      times: quizTimes,
+      quizIndex,
+      startedAtUtc: quizStartedAt,
+    };
+    saveDraft(draft);
+    setQuizDraft(draft);
+  }, [
+    activePage,
+    quizResult,
+    quizQuestions,
+    quizAnswers,
+    quizTimes,
+    quizIndex,
+    quizStartedAt,
+    quizCategory,
+    selectedLessonId,
+  ]);
+
+  function applyDraft(draft: QuizDraft) {
+    const lesson = lessons.find((item) => item.id === draft.lessonId);
+    if (lesson) {
+      setSelectedBook(lesson.book);
+      setSelectedLevel(lesson.level);
+    }
+    setSelectedLessonId(draft.lessonId);
+    setQuizCategory(draft.category);
+    setQuizQuestions(draft.questions);
+    setQuizAnswers(draft.answers);
+    setQuizTimes(draft.times);
+    setQuizIndex(draft.quizIndex);
+    setQuizStartedAt(draft.startedAtUtc);
+    setQuestionStartedAt(Date.now());
+    setQuizResult(null);
+    setQuizError("");
+    setQuizDraft(draft);
+  }
+
+  function exitQuizPage() {
+    setActivePage("quizzes");
+  }
+
+  function finishQuizSession() {
+    clearDraft();
+    setQuizDraft(null);
+    setQuizResult(null);
+    setQuizQuestions([]);
+    setQuizAnswers({});
+    setQuizTimes({});
+    setQuizIndex(0);
+    setActivePage("quizzes");
+  }
 
   async function loadProgress(accessToken: string) {
     setProgressLoading(true);
@@ -221,13 +282,25 @@ export default function App() {
       if (!questions.length) {
         throw new Error(t.noQuestionsForMode);
       }
+      const startedAtUtc = new Date().toISOString();
       setQuizQuestions(questions);
       setQuizAnswers({});
       setQuizTimes({});
       setQuizIndex(0);
-      setQuizStartedAt(new Date().toISOString());
+      setQuizStartedAt(startedAtUtc);
       setQuestionStartedAt(Date.now());
-      setQuizOpen(true);
+      const draft: QuizDraft = {
+        lessonId: selectedLessonId,
+        category,
+        questions,
+        answers: {},
+        times: {},
+        quizIndex: 0,
+        startedAtUtc,
+      };
+      saveDraft(draft);
+      setQuizDraft(draft);
+      setActivePage("quiz");
     } catch (error) {
       setQuizError(
         error instanceof Error ? error.message : t.fetchQuestionsFailed,
@@ -235,6 +308,16 @@ export default function App() {
     } finally {
       setQuizLoading(false);
     }
+  }
+
+  function openOrResumeQuiz(category: QuizCategory) {
+    const draft = loadDraft();
+    if (draftMatches(draft, selectedLessonId, category) && draft) {
+      applyDraft(draft);
+      setActivePage("quiz");
+      return;
+    }
+    void startQuiz(category);
   }
 
   function selectAnswer(answer: string) {
@@ -297,12 +380,13 @@ export default function App() {
             ? "جلسهٔ ورود منقضی شد؛ لطفاً دوباره وارد شوید."
             : "Your session expired. Please log in again.",
         );
-        setQuizOpen(false);
         openAuth("login");
         return;
       }
       if (!response.ok) throw new Error(await getError(response, t.requestFailed));
       const result = (await response.json()) as AttemptResult;
+      clearDraft();
+      setQuizDraft(null);
       setQuizResult(result);
       await loadProgress(token);
       await loadHistory(token);
@@ -509,7 +593,11 @@ export default function App() {
                 <button
                   key={page}
                   onClick={() => setActivePage(page)}
-                  className={`rounded-full px-3 py-2 text-xs font-bold transition ${activePage === page ? "bg-de-black text-white" : "text-muted hover:bg-white"}`}
+                  className={`rounded-full px-3 py-2 text-xs font-bold transition ${
+                    activePage === page || (page === "quizzes" && activePage === "quiz")
+                      ? "bg-de-black text-white"
+                      : "text-muted hover:bg-white"
+                  }`}
                 >
                   {pageLabels[page]}
                 </button>
@@ -546,6 +634,7 @@ export default function App() {
           </div>
         </header>
 
+        {activePage !== "quiz" && (
         <section className="mt-10 grid items-stretch gap-8 lg:grid-cols-[1.15fr_0.85fr]">
           <div
             className="animate-rise relative z-10 self-center rounded-[2rem] border border-line bg-gradient-to-br from-surface via-de-cream to-surface-warm p-6 shadow-sm sm:p-8"
@@ -570,8 +659,9 @@ export default function App() {
             />
           </div>
         </section>
+        )}
 
-        {activePage !== "quizzes" && progress && (
+        {activePage !== "quizzes" && activePage !== "quiz" && progress && (
           <section className="mt-12 grid gap-3 sm:grid-cols-4">
             {(
               [
@@ -872,183 +962,219 @@ export default function App() {
             {quizModeMeta.map((mode) => {
               const copy = t.quizModes[mode.category];
               const sectionCompleted = token && hasCompletedSection(selectedLessonId, mode.category);
+              const sectionInProgress = draftMatches(
+                quizDraft,
+                selectedLessonId,
+                mode.category,
+              );
               return (
                 <button
                   key={mode.category}
-                  onClick={() => void startQuiz(mode.category)}
+                  onClick={() => openOrResumeQuiz(mode.category)}
                   disabled={quizLoading}
-                  className={`group rounded-[1.75rem] border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait ${textAlign} ${sectionCompleted ? "border-emerald-400 bg-gradient-to-br from-emerald-50 to-white" : mode.card}`}
+                  className={`group rounded-[1.75rem] border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait ${textAlign} ${
+                    sectionInProgress
+                      ? "border-de-amber bg-gradient-to-br from-surface-warm to-white"
+                      : sectionCompleted
+                        ? "border-emerald-400 bg-gradient-to-br from-emerald-50 to-white"
+                        : mode.card
+                  }`}
                 >
                   <span
-                    className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${sectionCompleted ? "bg-emerald-600 text-white" : mode.accent}`}
+                    className={`inline-block rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
+                      sectionInProgress
+                        ? "bg-de-amber text-de-black"
+                        : sectionCompleted
+                          ? "bg-emerald-600 text-white"
+                          : mode.accent
+                    }`}
                   >
-                    {sectionCompleted ? `✓ ${mode.subtitle}` : mode.subtitle}
+                    {sectionInProgress
+                      ? t.inProgress
+                      : sectionCompleted
+                        ? `✓ ${mode.subtitle}`
+                        : mode.subtitle}
                   </span>
                   <h3 className="mt-4 text-lg font-bold text-de-black">{copy.title}</h3>
                   <p className="mt-2 text-sm leading-7 text-muted">{copy.description}</p>
                   <div className="mt-5 text-sm font-bold text-de-red group-hover:underline">
-                    {t.start}
+                    {sectionInProgress ? t.continueQuiz : t.start}
                   </div>
                 </button>
               );
             })}
           </div>
+          {quizError && activePage === "quizzes" && (
+            <p className="mt-4 rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-center text-xs font-semibold text-de-red">
+              {quizError}
+            </p>
+          )}
         </section>}
-      </div>
 
-      {quizOpen && activeQuestion && (
-        <div
-          className="fixed inset-0 z-40 grid place-items-center bg-de-black/50 px-5 py-6 backdrop-blur-sm"
-          onMouseDown={() => !quizSubmitting && setQuizOpen(false)}
-        >
-          <div
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-line bg-surface p-6 shadow-2xl sm:p-8"
-            onMouseDown={(event) => event.stopPropagation()}
-          >
-            {quizResult ? (
-              <div className="text-center">
-                <div className="de-flag mx-auto h-16 w-12 rounded-2xl shadow-md" aria-hidden>
-                  <span /><span /><span />
-                </div>
-                <p className="mt-5 text-xs font-bold uppercase tracking-wider text-de-red">
-                  Ergebnis
-                </p>
-                <h2 className="font-display mt-2 text-4xl font-extrabold text-de-black">
-                  {Math.round(quizResult.score)}٪
-                </h2>
-                <p className="mt-3 text-sm text-muted">
-                  {t.resultCorrectSummary(
-                    quizResult.correctAnswers,
-                    quizResult.totalQuestions,
-                    Math.round(quizResult.totalTimeMs / 1000),
-                  )}
-                </p>
-                <div className={`mt-7 space-y-2 ${textAlign}`}>
-                  {quizResult.answers.map((answer, index) => (
-                    <div
-                      key={answer.questionId}
-                      className={`rounded-3xl border p-4 ${
-                        answer.isCorrect
-                          ? "border-de-gold/60 bg-surface-warm"
-                          : "border-de-rose/40 bg-surface-rose"
-                      }`}
-                    >
-                      <p className="text-sm font-bold text-de-black" dir="ltr">
-                        {index + 1}. {answer.prompt}
-                      </p>
-                      <p className="mt-2 text-xs text-muted" dir="ltr">
-                        {t.yourAnswer}{" "}
-                        <span className="font-bold">{answer.selectedAnswer}</span>
-                        {!answer.isCorrect && (
-                          <>
-                            {" "}
-                            · {t.correctLabel}{" "}
-                            <span className="font-bold text-de-black">{answer.correctAnswer}</span>
-                          </>
+        {activePage === "quiz" && (
+          <section className="mt-10 pb-16">
+            <div className="mx-auto max-w-2xl rounded-[2rem] border border-line bg-surface p-6 shadow-sm sm:p-8">
+              {quizResult ? (
+                <div className="text-center">
+                  <div className="de-flag mx-auto h-16 w-12 rounded-2xl shadow-md" aria-hidden>
+                    <span /><span /><span />
+                  </div>
+                  <p className="mt-5 text-xs font-bold uppercase tracking-wider text-de-red">
+                    Ergebnis
+                  </p>
+                  <h2 className="font-display mt-2 text-4xl font-extrabold text-de-black">
+                    {Math.round(quizResult.score)}٪
+                  </h2>
+                  <p className="mt-3 text-sm text-muted">
+                    {t.resultCorrectSummary(
+                      quizResult.correctAnswers,
+                      quizResult.totalQuestions,
+                      Math.round(quizResult.totalTimeMs / 1000),
+                    )}
+                  </p>
+                  <div className={`mt-7 space-y-2 ${textAlign}`}>
+                    {quizResult.answers.map((answer, index) => (
+                      <div
+                        key={answer.questionId}
+                        className={`rounded-3xl border p-4 ${
+                          answer.isCorrect
+                            ? "border-de-gold/60 bg-surface-warm"
+                            : "border-de-rose/40 bg-surface-rose"
+                        }`}
+                      >
+                        <p className="text-sm font-bold text-de-black" dir="ltr">
+                          {index + 1}. {answer.prompt}
+                        </p>
+                        <p className="mt-2 text-xs text-muted" dir="ltr">
+                          {t.yourAnswer}{" "}
+                          <span className="font-bold">{answer.selectedAnswer}</span>
+                          {!answer.isCorrect && (
+                            <>
+                              {" "}
+                              · {t.correctLabel}{" "}
+                              <span className="font-bold text-de-black">{answer.correctAnswer}</span>
+                            </>
+                          )}
+                        </p>
+                        {answer.explanation && (
+                          <p className="mt-2 text-xs leading-6 text-muted">{answer.explanation}</p>
                         )}
-                      </p>
-                      {answer.explanation && (
-                        <p className="mt-2 text-xs leading-6 text-muted">{answer.explanation}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={() => setQuizOpen(false)}
-                  className="mt-7 rounded-2xl bg-de-black px-6 py-3 text-sm font-bold text-white"
-                >
-                  {t.back}
-                </button>
-              </div>
-            ) : (
-              <>
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-bold uppercase tracking-wider text-de-red">
-                      {quizCategory === "Vocabulary"
-                        ? "Wortschatz"
-                        : quizCategory === "Grammar"
-                          ? "Grammatik"
-                          : "Komplett"}
-                    </p>
-                    <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
-                      {t.questionOf(quizIndex + 1, quizQuestions.length)}
-                    </h2>
+                      </div>
+                    ))}
                   </div>
-                  <button onClick={() => setQuizOpen(false)} className="text-xl text-muted">
-                    ×
-                  </button>
-                </div>
-                <div className="mt-5 h-2 overflow-hidden rounded-full bg-line">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-l from-de-red to-de-gold transition-all"
-                    style={{
-                      width: `${((quizIndex + 1) / quizQuestions.length) * 100}%`,
-                    }}
-                  />
-                </div>
-                <div className="mt-8 rounded-[1.75rem] border border-line bg-gradient-to-b from-de-cream to-background p-5 sm:p-7">
-                  <p
-                    className="text-center text-xl font-bold leading-9 text-de-black"
-                    dir="ltr"
-                  >
-                    {activeQuestion.prompt}
-                  </p>
-                  <div className="mt-7 grid gap-2">
-                    {activeQuestion.options.map((option) => {
-                      const selected = quizAnswers[activeQuestion.id] === option;
-                      return (
-                        <button
-                          key={option}
-                          onClick={() => selectAnswer(option)}
-                          className={`rounded-2xl border px-4 py-3.5 text-center text-base font-semibold transition ${
-                            selected
-                              ? "border-de-black bg-de-black text-white shadow-md"
-                              : "border-line bg-white text-de-black hover:border-de-red hover:bg-surface-rose"
-                          }`}
-                          dir="ltr"
-                        >
-                          {option}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                {quizError && (
-                  <p className="mt-4 rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-center text-xs font-semibold text-de-red">
-                    {quizError}
-                  </p>
-                )}
-                <div className="mt-6 flex items-center justify-between gap-3">
                   <button
-                    onClick={() => setQuizOpen(false)}
-                    className="rounded-2xl border border-line px-4 py-3 text-sm font-semibold text-muted"
+                    onClick={finishQuizSession}
+                    className="mt-7 rounded-2xl bg-de-black px-6 py-3 text-sm font-bold text-white"
                   >
-                    {t.cancel}
+                    {t.back}
                   </button>
-                  {quizIndex < quizQuestions.length - 1 ? (
-                    <button
-                      onClick={nextQuestion}
-                      disabled={!quizAnswers[activeQuestion.id]}
-                      className="rounded-2xl bg-de-red px-5 py-3 text-sm font-bold text-white shadow-md shadow-de-red/20 disabled:opacity-40"
-                    >
-                      {t.next}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => void submitQuiz()}
-                      disabled={!quizAnswers[activeQuestion.id] || quizSubmitting}
-                      className="rounded-2xl bg-de-black px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
-                    >
-                      {quizSubmitting ? t.submitting : t.submitQuiz}
-                    </button>
-                  )}
                 </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
+              ) : activeQuestion ? (
+                <>
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-xs font-bold uppercase tracking-wider text-de-red">
+                        {quizCategory === "Vocabulary"
+                          ? "Wortschatz"
+                          : quizCategory === "Grammar"
+                            ? "Grammatik"
+                            : "Komplett"}
+                      </p>
+                      <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                        {t.questionOf(quizIndex + 1, quizQuestions.length)}
+                      </h2>
+                      <p className="mt-1 text-xs text-muted">{t.resumeHint}</p>
+                    </div>
+                    <button
+                      onClick={exitQuizPage}
+                      disabled={quizSubmitting}
+                      className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-muted hover:bg-de-mist disabled:opacity-40"
+                    >
+                      {t.exitQuiz}
+                    </button>
+                  </div>
+                  <div className="mt-5 h-2 overflow-hidden rounded-full bg-line">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-l from-de-red to-de-gold transition-all"
+                      style={{
+                        width: `${((quizIndex + 1) / quizQuestions.length) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <div className="mt-8 rounded-[1.75rem] border border-line bg-gradient-to-b from-de-cream to-background p-5 sm:p-7">
+                    <p
+                      className="text-center text-xl font-bold leading-9 text-de-black"
+                      dir="ltr"
+                    >
+                      {activeQuestion.prompt}
+                    </p>
+                    <div className="mt-7 grid gap-2">
+                      {activeQuestion.options.map((option) => {
+                        const selected = quizAnswers[activeQuestion.id] === option;
+                        return (
+                          <button
+                            key={option}
+                            onClick={() => selectAnswer(option)}
+                            className={`rounded-2xl border px-4 py-3.5 text-center text-base font-semibold transition ${
+                              selected
+                                ? "border-de-black bg-de-black text-white shadow-md"
+                                : "border-line bg-white text-de-black hover:border-de-red hover:bg-surface-rose"
+                            }`}
+                            dir="ltr"
+                          >
+                            {option}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  {quizError && (
+                    <p className="mt-4 rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-center text-xs font-semibold text-de-red">
+                      {quizError}
+                    </p>
+                  )}
+                  <div className="mt-6 flex items-center justify-between gap-3">
+                    <button
+                      onClick={exitQuizPage}
+                      disabled={quizSubmitting}
+                      className="rounded-2xl border border-line px-4 py-3 text-sm font-semibold text-muted disabled:opacity-40"
+                    >
+                      {t.exitQuiz}
+                    </button>
+                    {quizIndex < quizQuestions.length - 1 ? (
+                      <button
+                        onClick={nextQuestion}
+                        disabled={!quizAnswers[activeQuestion.id]}
+                        className="rounded-2xl bg-de-red px-5 py-3 text-sm font-bold text-white shadow-md shadow-de-red/20 disabled:opacity-40"
+                      >
+                        {t.next}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => void submitQuiz()}
+                        disabled={!quizAnswers[activeQuestion.id] || quizSubmitting}
+                        className="rounded-2xl bg-de-black px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
+                      >
+                        {quizSubmitting ? t.submitting : t.submitQuiz}
+                      </button>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="text-center">
+                  <p className="text-sm text-muted">{t.fetching}</p>
+                  <button
+                    onClick={exitQuizPage}
+                    className="mt-6 rounded-2xl border border-line px-4 py-3 text-sm font-semibold text-muted"
+                  >
+                    {t.back}
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
+        )}
+      </div>
 
       {authOpen && (
         <div
