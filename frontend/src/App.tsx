@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   ACTIVE_UI_LANGUAGE,
   Language,
@@ -596,6 +596,48 @@ export default function App() {
   const pageLabels = uiLanguage === "fa"
     ? { quizzes: "آزمون‌ها", progress: "پیشرفت", history: "تاریخچه آزمون‌ها" }
     : { quizzes: "Quizzes", progress: "Progress", history: "Quiz history" };
+  const streak = useMemo(() => {
+    const dayKey = (date: Date) =>
+      `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    const activeDays = new Set(
+      history
+        .filter((attempt) => attempt.completedAtUtc)
+        .map((attempt) => dayKey(new Date(attempt.completedAtUtc!))),
+    );
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    let cursor = activeDays.has(dayKey(today)) ? today : activeDays.has(dayKey(yesterday)) ? yesterday : null;
+    let current = 0;
+    while (cursor && activeDays.has(dayKey(cursor))) {
+      current += 1;
+      const previous = new Date(cursor);
+      previous.setDate(previous.getDate() - 1);
+      cursor = previous;
+    }
+    let longest = 0;
+    let running = 0;
+    let previousKey = "";
+    for (const key of [...activeDays].sort()) {
+      const day = new Date(`${key}T00:00:00`);
+      const previous = new Date(day);
+      previous.setDate(previous.getDate() - 1);
+      running = previousKey === dayKey(previous) ? running + 1 : 1;
+      longest = Math.max(longest, running);
+      previousKey = key;
+    }
+    const week = Array.from({ length: 7 }, (_, index) => {
+      const day = new Date(today);
+      day.setDate(today.getDate() - (6 - index));
+      return {
+        key: dayKey(day),
+        label: day.toLocaleDateString(localeFor(uiLanguage), { weekday: "narrow" }),
+        day: day.getDate(),
+      };
+    });
+    return { current, longest, activeDays, week };
+  }, [history, uiLanguage]);
 
   return (
     <main className="min-h-screen">
@@ -706,6 +748,28 @@ export default function App() {
                 <p className="font-display mt-2 text-2xl font-bold">{value}</p>
               </div>
             ))}
+          </section>
+        )}
+
+        {token && activePage !== "quiz" && (
+          <section className="mt-8 overflow-hidden rounded-[2rem] border border-orange-200 bg-gradient-to-l from-orange-50 via-amber-50 to-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                <div className="grid h-16 w-16 place-items-center rounded-3xl bg-orange-500 text-3xl shadow-lg shadow-orange-500/25" aria-hidden>🔥</div>
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wider text-orange-700">{uiLanguage === "fa" ? "استریک یادگیری" : "Learning streak"}</p>
+                  <p className="font-display mt-1 text-3xl font-extrabold text-de-black">{streak.current} {uiLanguage === "fa" ? "روز" : streak.current === 1 ? "day" : "days"}</p>
+                  <p className="mt-1 text-xs text-muted">{uiLanguage === "fa" ? `بهترین رکورد: ${streak.longest} روز` : `Best streak: ${streak.longest} days`}</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-7 gap-2" dir="ltr">
+                {streak.week.map((day) => {
+                  const active = streak.activeDays.has(day.key);
+                  return <div key={day.key} className="flex flex-col items-center gap-1"><span className="text-[10px] font-bold text-muted">{day.label}</span><span className={`grid h-9 w-9 place-items-center rounded-full text-xs font-bold ${active ? "bg-orange-500 text-white shadow-md shadow-orange-500/25" : "border border-orange-100 bg-white text-muted"}`}>{active ? "✓" : day.day}</span></div>;
+                })}
+              </div>
+            </div>
+            {streak.current === 0 && <p className="mt-4 rounded-2xl bg-white/70 px-3 py-2 text-xs text-muted">{uiLanguage === "fa" ? "امروز یک آزمون را ثبت کن تا استریکت شروع شود." : "Finish a quiz today to start your streak."}</p>}
           </section>
         )}
 
