@@ -1,159 +1,118 @@
 # DeutschQuiz
 
-وب‌اپ آزمون زبان آلمانی برای `Menschen` (A1.1 تا B1.2) و `Starten wir!` (A1، A2، B1).
+DeutschQuiz is a full-stack German learning application built around short, lesson-based quizzes. It helps learners practise vocabulary and grammar, track quiz performance over time, complete lessons progressively, and maintain a daily learning streak.
 
-## ساختار
+## Highlights
 
-- `backend/` — API مستقل با ASP.NET Core و Clean Architecture
-- `frontend/` — رابط کاربری مستقل با React (Vite)، TypeScript و Tailwind CSS
+- Lesson-based content for **Menschen** (`A1.1` through `B1.2`) and **Starten wir!** (`A1`, `A2`, and `B1`)
+- Three quiz modes per lesson: **Vocabulary**, **Grammar**, and **Mixed**
+- User registration and sign-in with JWT authentication
+- PostgreSQL-backed quiz attempts, answer timing, and progress history
+- ECharts-powered progress charts, separated by quiz category
+- Completion indicators for quiz sections, lessons, and books
+- Daily learning streak with current streak, best streak, and the last seven days of activity
 
-## کار تیمی و شاخه‌ها
+## Technology Stack
 
-- شاخه‌ی پیش‌فرض روزمره: `develop` (کار روزانه و مشاهدهٔ پروژه)
-- شاخه‌ی انتشار / لانچ: `master` (فقط نسخهٔ نهایی)
-- جزئیات workflow و دعوت همکار: [CONTRIBUTING.md](CONTRIBUTING.md)
+| Area | Technologies |
+| --- | --- |
+| Frontend | React, TypeScript, Vite, Tailwind CSS, ECharts |
+| Backend | ASP.NET Core, Entity Framework Core, JWT Bearer Authentication |
+| Database | PostgreSQL |
+| Local infrastructure | Docker Compose |
 
-## وضعیت فعلی
+## Quick Start
 
-- آزمون‌های درس‌به‌درس برای `Menschen` در سطوح `A1.1 → A1.2 → A2.1 → A2.2 → B1.1 → B1.2` و `Starten wir!` در سطوح `A1 → A2 → B1`
-- سه حالت آزمون برای هر درس: واژگان (`Vocabulary`)، گرامر (`Grammar`) و جامع (`Mixed`)
-- هر درس در حالت جامع ۲۰ سؤال دارد: ۱۰ واژگان و ۱۰ گرامر
-- سؤال‌های درس‌های بالاتر، نکات پایه‌ی درس‌های قبلی را هم به‌صورت تجمعی مرور می‌کنند.
-- انتخاب کتاب و درس از رابط کاربری و دریافت سؤال‌های همان درس از API
-- ثبت‌نام، ورود با JWT و نمایش پیشرفت کاربر
-- ثبت نتیجه‌ی آزمون و زمان پاسخ‌گویی به هر سؤال
+### Prerequisites
 
-## اجرای بک‌اند
+- .NET SDK 10 or later
+- Node.js 20 or later
+- Docker Desktop
 
-```bash
-dotnet run --project backend/src/DeutschQuiz.Api
-```
+### Start the database
 
-APIهای اولیه:
-
-- `GET /api/health`
-- `GET /api/lessons`
-- `GET /api/lessons/{lessonId}/questions?category=Vocabulary|Grammar|Mixed`
-
-کاتالوگ `Menschen` شامل این سطوح است:
-
-`A1.1 → A1.2 → A2.1 → A2.2 → B1.1 → B1.2`
-
-هر سطح ۱۲ درس با ۲۰ سؤال (۱۰ واژگان + ۱۰ گرامر) دارد.
-
-کاتالوگ `Menschen A1.1` شامل این درس‌هاست:
-
-1. `Hallo! Ich bin ...`
-2. `Familie und Freunde`
-3. `Zahlen und Alltag`
-4. `Essen und Trinken`
-5. `Wohnen`
-6. `Freizeit`
-7. `Arbeit und Termine`
-8. `Kleidung und Farben`
-9. `Gesundheit`
-10. `Unterwegs`
-11. `Wetter und Jahreszeiten`
-12. `Reisen und Pläne`
-
-کاتالوگ `Menschen A1.2` شامل این درس‌هاست:
-
-13. `Wir suchen das Hotel Maritim`
-14. `Wie findest du Ottos Haus?`
-15. `In Giesing wohnt das Leben`
-16. `Wir haben hier ein Problem`
-17. `Wer will Popstar werden?`
-18. `Geben Sie ihm doch diesen Tee`
-19. `Der hatte doch keinen Bauch`
-20. `Komm sofort runter!`
-21. `Bei Rot musst du stehen`
-22. `Am besten sind seine Schuhe`
-23. `Ins Wasser gefallen`
-24. `Ich würde am liebsten jeden Tag feiern`
-
-## حساب کاربری و پیشرفت
-
-با تنظیم `ConnectionStrings__DeutschQuiz` و `Jwt__SigningKey`، endpointهای زیر فعال می‌شوند:
-
-- `POST /api/auth/register` — ساخت حساب با `email`، `password` و `displayName`
-- `POST /api/auth/login` — دریافت JWT
-- `POST /api/attempts` — ثبت نتیجه‌ی آزمون و زمان پاسخ هر سؤال (نیازمند Bearer token)
-- `GET /api/progress/summary` — خلاصه‌ی نمره، بهترین نتیجه، زمان و پیشرفت درس‌ها؛ برای هر درس میانگین، بهترین نمره، تعداد پاسخ درست و زمان کل هم برمی‌گردد
-- `GET /api/progress/history?limit=10` — آخرین تلاش‌های کاربر با نوع آزمون، نمره، زمان و تاریخ
-
-پاسخ `POST /api/attempts` علاوه بر نمره و زمان کل، آرایه‌ی `answers` را برمی‌گرداند.
-هر آیتم شامل متن سؤال، پاسخ انتخاب‌شده، پاسخ درست، وضعیت صحیح/غلط، توضیح و زمان
-پاسخ است؛ پاسخ درست فقط بعد از ثبت آزمون ارسال می‌شود.
-
-نمونه‌ی بدنه‌ی ثبت نتیجه:
-
-```json
-{
-  "lessonId": "11111111-1111-1111-1111-111111111111",
-  "category": "Mixed",
-  "startedAtUtc": "2026-09-01T10:00:00Z",
-  "answers": [
-    {
-      "questionId": "20000000-0000-0000-0000-000000000001",
-      "selectedAnswer": "Wie geht's?",
-      "responseTimeMs": 4200
-    },
-    {
-      "questionId": "20000000-0000-0000-0000-000000000002",
-      "selectedAnswer": "bin",
-      "responseTimeMs": 3100
-    },
-    {
-      "questionId": "20000000-0000-0000-0000-000000000003",
-      "selectedAnswer": "Wie",
-      "responseTimeMs": 2800
-    },
-    {
-      "questionId": "20000000-0000-0000-0000-000000000004",
-      "selectedAnswer": "komme",
-      "responseTimeMs": 3500
-    }
-  ]
-}
-```
-
-برای آزمون‌های `Vocabulary` یا `Grammar` فقط سؤال‌های همان دسته را ارسال کنید.
-برای `Mixed` همه‌ی سؤال‌های فعال درس باید در `answers` وجود داشته باشند؛ پاسخ ناقص
-ثبت نمی‌شود.
-
-## دیتابیس PostgreSQL
-
-دیتابیس اصلی پروژه PostgreSQL است و EF Core در لایه‌ی Infrastructure قرار دارد.
-در حالت توسعه، اگر connection string تنظیم نشده باشد، API برای راحتی با داده‌ی موقت in-memory اجرا می‌شود.
-
-1. فایل `.env.example` را به `.env` کپی کنید و مقدار رمز محلی را تغییر دهید.
-2. PostgreSQL را بالا بیاورید:
-
-```bash
+```powershell
+Copy-Item .env.example .env
 docker compose --env-file .env up -d postgres
 ```
 
-3. قبل از اجرای API، connection string را در محیط تنظیم کنید:
-
-PowerShell:
+### Start the API
 
 ```powershell
-$env:ConnectionStrings__DeutschQuiz = "Host=localhost;Port=5432;Database=deutschquiz;Username=deutschquiz;Password=YOUR_LOCAL_PASSWORD"
-dotnet run --project backend/src/DeutschQuiz.Api
+dotnet run --project backend/src/DeutschQuiz.Api --launch-profile http
 ```
 
-در اولین اجرای API، migrationها و داده‌های نمونه‌ی هر ۱۲ درس هر دو کتاب به صورت خودکار اعمال می‌شوند. Seeder به شکل افزایشی کار می‌کند؛ بنابراین با اجرای مجدد، درس‌ها و سؤال‌های موجود دوباره درج نمی‌شوند.
-از این مرحله به بعد، تغییرات schema با EF Core migration نسخه‌بندی می‌شوند.
+The API runs at `http://localhost:5083`. It applies migrations and seeds quiz content on startup.
 
-## اجرای فرانت‌اند
+### Start the frontend
 
-```bash
+```powershell
 cd frontend
 npm install
 npm run dev
 ```
 
-فرانت‌اند روی `http://localhost:5173` اجرا می‌شود.
-در صورت نیاز، مقدار `VITE_API_BASE_URL` را مطابق `frontend/.env.example` تنظیم کن.
+Open `http://localhost:5173` in a browser.
 
-محتوای سؤال‌های نمونه باید原创 و مستقل از متن و تمرین‌های دارای حق نشر کتاب طراحی شود.
+## Configuration
+
+The API uses PostgreSQL and JWT settings from `.env` or environment variables.
+
+```dotenv
+ConnectionStrings__DeutschQuiz=Host=127.0.0.1;Port=5432;Database=deutschquiz;Username=deutschquiz;Password=YOUR_PASSWORD;SSL Mode=Disable;Timeout=30
+Jwt__SigningKey=replace-with-a-long-development-secret
+Jwt__Issuer=DeutschQuiz.Api
+Jwt__Audience=DeutschQuiz.Web
+```
+
+For a non-default API address, set this in `frontend/.env`:
+
+```dotenv
+VITE_API_BASE_URL=http://localhost:5083/api
+```
+
+## API Overview
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/api/health` | Service health check |
+| `GET` | `/api/lessons` | List lessons |
+| `GET` | `/api/lessons/{lessonId}/questions?category=Vocabulary\|Grammar\|Mixed` | Get lesson questions |
+| `POST` | `/api/auth/register` | Create an account |
+| `POST` | `/api/auth/login` | Receive a JWT |
+| `POST` | `/api/attempts` | Save a quiz attempt |
+| `GET` | `/api/progress/summary` | Get aggregate and per-lesson progress |
+| `GET` | `/api/progress/history?limit=500` | Get attempt history |
+
+Protected endpoints require:
+
+```http
+Authorization: Bearer <access-token>
+```
+
+## Development Commands
+
+```powershell
+# Frontend
+cd frontend
+npm run build
+npm run lint
+
+# Backend
+dotnet build DeutschQuiz.slnx
+```
+
+## Progress Rules
+
+- A quiz section is complete after its matching quiz mode has been saved.
+- A lesson is complete after Vocabulary, Grammar, and Mixed are all complete.
+- A book is complete after every lesson in that book is complete.
+- A streak is a consecutive run of calendar days with at least one saved quiz attempt.
+
+## Contributing
+
+Use `develop` for active work and reserve `master` for release-ready code. See [CONTRIBUTING.md](CONTRIBUTING.md) for the collaboration workflow.
+
+## Content Notice
+
+Quiz content is original practice material and is not a reproduction of copyrighted textbook exercises.
