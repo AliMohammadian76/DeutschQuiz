@@ -184,16 +184,16 @@ public static class StartenWirA2QuizContentCatalog
                 "این گزینه با معنی و کاربرد جمله سازگار است."))
             .Concat(
             [
-                new(QuizCategory.Grammar, $"„Ich ___ .“ – Form von {verb.Infinitive}:", [verb.Ich, verb.Du, verb.Wir], verb.Ich, $"با «ich» شکل درست فعل {verb.Infinitive}، «{verb.Ich}» است."),
-                new(QuizCategory.Grammar, $"„Du ___ .“ – Form von {verb.Infinitive}:", [verb.Du, verb.Ich, verb.Wir], verb.Du, $"با «du» شکل درست فعل {verb.Infinitive}، «{verb.Du}» است."),
-                new(QuizCategory.Grammar, $"„Er ___ .“ – Form von {verb.Infinitive}:", [verb.Er, verb.Ich, verb.Wir], verb.Er, $"با «er» شکل درست فعل {verb.Infinitive}، «{verb.Er}» است."),
-                new(QuizCategory.Grammar, $"„Wir ___ .“ – Form von {verb.Infinitive}:", [verb.Wir, verb.Er, verb.Du], verb.Wir, $"با «wir» شکل درست فعل {verb.Infinitive}، «{verb.Wir}» است."),
-                new(QuizCategory.Grammar, $"„Ihr ___ .“ – Form von {verb.Infinitive}:", [verb.Ihr, verb.Wir, verb.Ich], verb.Ihr, $"با «ihr» شکل درست فعل {verb.Infinitive}، «{verb.Ihr}» است."),
-                new(QuizCategory.Grammar, $"„Sie ___ .“ – Form von {verb.Infinitive}:", [verb.Sie, verb.Ich, verb.Du], verb.Sie, $"با «Sie» شکل درست فعل {verb.Infinitive}، «{verb.Sie}» است."),
-                new(QuizCategory.Grammar, $"Frage mit „du“: ___ du?", [verb.Du, verb.Ich, verb.Wir], verb.Du, "در پرسش بله/خیر، فعل قبل از فاعل می‌آید."),
-                new(QuizCategory.Grammar, $"Frage mit „ihr“: ___ ihr?", [verb.Ihr, verb.Ich, verb.Wir], verb.Ihr, "در پرسش بله/خیر، فعل قبل از «ihr» می‌آید."),
-                new(QuizCategory.Grammar, $"„Am Samstag ___ ich .“ – Form von {verb.Infinitive}:", [verb.Ich, verb.Du, verb.Er], verb.Ich, "فاعل «ich» به شکل اول شخص فعل نیاز دارد."),
-                new(QuizCategory.Grammar, $"„Meine Freundin ___ .“ – Form von {verb.Infinitive}:", [verb.Er, verb.Ich, verb.Sie], verb.Er, "«Meine Freundin» سوم شخص مفرد است و با شکل «er/sie» می‌آید.")
+                new(QuizCategory.Grammar, $"Satzanfang: „Heute ___ ich {verb.Infinitive}.“", [verb.Ich, verb.Du, verb.Er], verb.Ich, "وقتی قید زمان در ابتدای جمله می‌آید، فعل صرف‌شده همچنان در جایگاه دوم قرار می‌گیرد."),
+                new(QuizCategory.Grammar, $"Ja/Nein-Frage: „___ du heute {verb.Infinitive}?“", [verb.Du, verb.Ich, verb.Wir], verb.Du, "در پرسش بله/خیر، فعل صرف‌شده در ابتدای جمله می‌آید."),
+                new(QuizCategory.Grammar, $"W-Frage: „Wann ___ er {verb.Infinitive}?“", [verb.Er, verb.Ich, verb.Wir], verb.Er, "در پرسش با کلمهٔ پرسشی، فعل صرف‌شده بعد از کلمهٔ پرسشی قرار می‌گیرد."),
+                new(QuizCategory.Grammar, $"Negation: „Wir ___ heute nicht {verb.Infinitive}.“", [verb.Wir, verb.Er, verb.Du], verb.Wir, "در جملهٔ اصلی، فعل صرف‌شده در جایگاه دوم و «nicht» قبل از بخش پایانی جمله قرار می‌گیرد."),
+                new(QuizCategory.Grammar, $"Modalverb: „Ihr ___ heute {verb.Infinitive}.“", ["müsst", "muss", "müssen"], "müsst", "با فعل وجهی، فعل اصلی به‌صورت مصدر در انتهای جمله می‌آید."),
+                new(QuizCategory.Grammar, $"Höfliche Frage: „___ Sie bitte {verb.Infinitive}?“", [verb.Sie, verb.Ich, verb.Du], verb.Sie, "برای خطاب رسمی «Sie»، فعل به صورت سوم‌شخص جمع صرف می‌شود."),
+                new(QuizCategory.Grammar, $"Satzstellung: „Morgen ___ du {verb.Infinitive}.“", [verb.Du, verb.Ich, verb.Wir], verb.Du, "وقتی زمان در ابتدای جمله است، فعل صرف‌شده در جایگاه دوم می‌ماند."),
+                new(QuizCategory.Grammar, $"Konjunktion: „Ich {verb.Ich} heute und ihr ___.“", [verb.Ihr, verb.Wir, verb.Du], verb.Ihr, "بعد از «und» ترتیب جملهٔ اصلی حفظ می‌شود و فعل با فاعل جدید صرف می‌شود."),
+                new(QuizCategory.Grammar, $"Perfekt: „Ich ___ gestern {verb.Infinitive}.“", ["habe", "bin", "hat"], "habe", "برای بیشتر فعل‌ها در Perfekt از «haben» استفاده می‌شود؛ Partizip II در انتهای جمله می‌آید."),
+                new(QuizCategory.Grammar, $"Subjekt: „Meine Freunde ___ heute {verb.Infinitive}.“", [verb.Sie, verb.Er, verb.Du], verb.Sie, "«Meine Freunde» جمع است؛ بنابراین شکل فعل مانند «sie» جمع استفاده می‌شود.")
             ])
             .ToList();
 
