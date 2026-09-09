@@ -112,8 +112,8 @@ html.light body {
   isolation: isolate;
   min-height: 100vh;
   background:
-    linear-gradient(rgb(10 8 8 / 31%), rgb(10 8 8 / 48%)),
-    url("/images/german-glass-bg-minimal.png") center / cover fixed,
+    linear-gradient(rgb(10 8 8 / 18%), rgb(10 8 8 / 30%)),
+    url("/images/german-glass-bg-clean.png") center / cover fixed,
     var(--background);
 }
 
