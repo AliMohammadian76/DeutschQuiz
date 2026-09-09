@@ -925,7 +925,7 @@ export default function App() {
           <section className="mt-8 overflow-hidden rounded-[2rem] border border-de-gold/25 bg-surface-warm p-5 sm:p-6">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
-                <div className="decorative-ui grid h-16 w-16 place-items-center rounded-3xl bg-de-red text-3xl text-white shadow-lg shadow-de-red/25" aria-hidden>🔥</div>
+                <div className="decorative-ui grid h-16 w-16 place-items-center text-4xl" aria-hidden>🔥</div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-de-red">{uiLanguage === "fa" ? "استریک یادگیری" : "Learning streak"}</p>
                   <p className="decorative-ui font-display mt-1 text-3xl font-extrabold text-foreground">{streak.current} {uiLanguage === "fa" ? "روز" : streak.current === 1 ? "day" : "days"}</p>
