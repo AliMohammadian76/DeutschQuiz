@@ -20,7 +20,6 @@ import { UserProgressChart } from "./UserProgressChart";
 import {
   applyTheme,
   getStoredTheme,
-  toggleTheme,
   type Theme,
 } from "./theme";
 
@@ -177,6 +176,7 @@ export default function App() {
   const [activePage, setActivePage] = useState<AppPage>("quizzes");
   const [pickerStep, setPickerStep] = useState<QuizPickerStep>("book");
   const [theme, setTheme] = useState<Theme>(() => getStoredTheme());
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [justFinishedScore, setJustFinishedScore] = useState<number | null>(null);
   const [translationInput, setTranslationInput] = useState("");
   const [translationOutput, setTranslationOutput] = useState("");
@@ -192,6 +192,14 @@ export default function App() {
 
   useEffect(() => {
     applyTheme(theme);
+  }, [theme]);
+
+  useEffect(() => {
+    if (theme !== "system") return;
+    const media = window.matchMedia("(prefers-color-scheme: light)");
+    const syncTheme = () => applyTheme("system");
+    media.addEventListener("change", syncTheme);
+    return () => media.removeEventListener("change", syncTheme);
   }, [theme]);
 
   useEffect(() => {
@@ -655,6 +663,20 @@ export default function App() {
   const pageLabels = uiLanguage === "fa"
     ? { quizzes: "آزمون‌ها", progress: "پیشرفت", history: "تاریخچه آزمون‌ها", translator: "مترجم" }
     : { quizzes: "Quizzes", progress: "Progress", history: "Quiz history", translator: "Translator" };
+
+  function NavIcon({ page }: { page: "quizzes" | "progress" | "history" | "translator" }) {
+    const common = { width: 28, height: 28, viewBox: "0 0 28 28", fill: "none", xmlns: "http://www.w3.org/2000/svg" };
+    if (page === "quizzes") {
+      return <svg {...common}><defs><linearGradient id="quizGlass" x1="4" y1="3" x2="24" y2="25"><stop stopColor="#fff" stopOpacity=".72"/><stop offset=".45" stopColor="#e7b84b"/><stop offset="1" stopColor="#e54858"/></linearGradient></defs><rect x="6.5" y="4" width="14" height="18" rx="3.5" stroke="url(#quizGlass)" strokeWidth="1.7"/><path d="m10 15 2.4 2.4L18 11.8" stroke="#f8d77d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 8.5h7" stroke="#fff" strokeOpacity=".7" strokeWidth="1.2" strokeLinecap="round"/></svg>;
+    }
+    if (page === "progress") {
+      return <svg {...common}><defs><linearGradient id="progressGlass" x1="4" y1="24" x2="23" y2="4"><stop stopColor="#e54858"/><stop offset=".55" stopColor="#e7b84b"/><stop offset="1" stopColor="#fff" stopOpacity=".8"/></linearGradient></defs><path d="M5 23V5M5 23h18" stroke="#fff" strokeOpacity=".55" strokeWidth="1.2" strokeLinecap="round"/><rect x="8" y="15" width="3.5" height="6" rx="1.2" fill="url(#progressGlass)"/><rect x="13" y="11" width="3.5" height="10" rx="1.2" fill="url(#progressGlass)"/><rect x="18" y="7" width="3.5" height="14" rx="1.2" fill="url(#progressGlass)"/></svg>;
+    }
+    if (page === "history") {
+      return <svg {...common}><defs><linearGradient id="historyGlass" x1="4" y1="22" x2="24" y2="5"><stop stopColor="#e54858"/><stop offset=".5" stopColor="#e7b84b"/><stop offset="1" stopColor="#fff" stopOpacity=".8"/></linearGradient></defs><path d="M7.2 10.2A8.2 8.2 0 1 1 6 17" stroke="url(#historyGlass)" strokeWidth="1.8" strokeLinecap="round"/><path d="M7.2 6.5v3.8H3.5" stroke="#fff" strokeOpacity=".75" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 9.2v5l3.2 1.8" stroke="#f8d77d" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+    }
+    return <svg {...common}><defs><linearGradient id="translateGlass" x1="4" y1="22" x2="24" y2="6"><stop stopColor="#e54858"/><stop offset=".5" stopColor="#e7b84b"/><stop offset="1" stopColor="#fff" stopOpacity=".8"/></linearGradient></defs><path d="M5 7.5A3.5 3.5 0 0 1 8.5 4h11A3.5 3.5 0 0 1 23 7.5v7a3.5 3.5 0 0 1-3.5 3.5h-6.2L8 22v-4H8.5A3.5 3.5 0 0 1 5 14.5v-7Z" stroke="url(#translateGlass)" strokeWidth="1.6"/><path d="M10 8.5h5M12.5 7v1.5M10 15l2.3-4 2.3 4M11 13.2h2.7" stroke="#fff" strokeOpacity=".8" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+  }
   const streak = useMemo(() => {
     const dayKey = (date: Date) =>
       `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -711,7 +733,48 @@ export default function App() {
         <span /><span /><span />
       </div>
 
-      <div className="glass-frame mx-auto max-w-6xl px-5 py-6 sm:px-8">
+      <div className="app-shell glass-frame mx-auto max-w-6xl gap-5 px-5 py-6 sm:px-8">
+        <aside className="app-sidebar">
+          <div className="app-sidebar__brand">
+            <span className="text-xs font-bold uppercase tracking-[0.18em] text-de-gold">DeutschQuiz</span>
+            <span className="mt-1 block text-[11px] text-muted">{uiLanguage === "fa" ? "فضای یادگیری" : "Learning space"}</span>
+          </div>
+          <div className="account-card">
+            <span className="account-card__icon" aria-hidden>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="8" r="3.2" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M5.8 19.2c.7-3.1 2.8-4.7 6.2-4.7s5.5 1.6 6.2 4.7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </span>
+            <span className="account-card__copy">
+              <span className="account-card__label">حساب کاربری</span>
+              <span className="account-card__name">{token ? userName || "کاربر" : "ورود به حساب"}</span>
+            </span>
+            <span className="account-card__chevron" aria-hidden>‹</span>
+          </div>
+          <nav className="app-sidebar__nav" aria-label="Main navigation">
+            {(["quizzes", "progress", "history", "translator"] as const).map((page) => {
+              const active = activePage === page || (page === "quizzes" && activePage === "quiz");
+              return (
+                <button
+                  key={page}
+                  onClick={() => {
+                    setActivePage(page);
+                    if (page === "quizzes") {
+                      setPickerStep("book");
+                      setQuizResult(null);
+                    }
+                  }}
+                  className={`app-sidebar__item ${active ? "app-sidebar__item--active" : ""}`}
+                >
+                  <span className="app-sidebar__icon" aria-hidden><NavIcon page={page} /></span>
+                  <span>{pageLabels[page]}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+        <div className="app-content">
         <header className="glass-header animate-rise flex flex-wrap items-center justify-between gap-3 border-b border-line pb-5">
           <div className="flex items-center gap-3">
             <div className="de-flag h-10 w-8 shrink-0 rounded-xl shadow-md" aria-hidden>
@@ -725,49 +788,8 @@ export default function App() {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <nav className="flex items-center gap-1 rounded-full border border-line bg-surface p-1" aria-label="Main navigation">
-              {(["quizzes", "progress", "history", "translator"] as const).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => {
-                    setActivePage(page);
-                    if (page === "quizzes") {
-                      setPickerStep("book");
-                      setQuizResult(null);
-                    }
-                  }}
-                  className={`rounded-full px-3 py-2 text-xs font-bold transition ${
-                    activePage === page || (page === "quizzes" && activePage === "quiz")
-                      ? "bg-de-red text-white"
-                      : "text-muted hover:bg-de-mist hover:text-foreground"
-                  }`}
-                >
-                  {pageLabels[page]}
-                </button>
-              ))}
-            </nav>
-            <button
-              type="button"
-              onClick={() => setTheme((current) => toggleTheme(current))}
-              className="grid h-10 w-10 place-items-center rounded-full border border-line bg-surface text-sm text-foreground transition hover:border-de-gold"
-              aria-label={theme === "dark" ? t.themeToLight : t.themeToDark}
-              title={theme === "dark" ? t.themeToLight : t.themeToDark}
-            >
-              {theme === "dark" ? "☀" : "☾"}
-            </button>
-            {SHOW_LANGUAGE_SWITCHER && (
-              <button
-                onClick={() => setLanguage(language === "fa" ? "en" : "fa")}
-                className="rounded-full border border-line bg-surface px-3 py-2 text-xs font-semibold text-muted transition hover:border-de-gold"
-              >
-                {language === "fa" ? "EN" : "FA"}
-              </button>
-            )}
             {token ? (
               <div className="flex items-center gap-2">
-                <span className="hidden text-sm font-semibold text-muted sm:inline">
-                  {userName}
-                </span>
                 <button
                   onClick={logout}
                   className="rounded-full border border-line bg-surface px-4 py-2 text-sm font-semibold text-foreground hover:bg-de-mist"
@@ -783,6 +805,71 @@ export default function App() {
                 {t.login}
               </button>
             )}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setSettingsOpen((open) => !open)}
+                aria-label="تنظیمات نمایش"
+                aria-expanded={settingsOpen}
+                className="settings-trigger grid h-10 w-10 place-items-center text-foreground transition"
+              >
+                <svg className="settings-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <defs>
+                    <linearGradient id="settingsGlass" x1="4" y1="3" x2="20" y2="21" gradientUnits="userSpaceOnUse">
+                      <stop stopColor="#FFF" stopOpacity=".9" />
+                      <stop offset=".35" stopColor="#FF6B73" />
+                      <stop offset="1" stopColor="#C92F3E" />
+                    </linearGradient>
+                  </defs>
+                  <path d="m9.85 3.4.45 1.62a7.2 7.2 0 0 1 2.4 0l.45-1.62 2.08.86-.57 1.56a7.2 7.2 0 0 1 1.7 1.7l1.56-.57.86 2.08-1.62.45a7.2 7.2 0 0 1 0 2.4l1.62.45-.86 2.08-1.56-.57a7.2 7.2 0 0 1-1.7 1.7l.57 1.56-2.08.86-.45-1.62a7.2 7.2 0 0 1-2.4 0l-.45 1.62-2.08-.86.57-1.56a7.2 7.2 0 0 1-1.7-1.7l-1.56.57-.86-2.08 1.62-.45a7.2 7.2 0 0 1 0-2.4l-1.62-.45.86-2.08 1.56.57a7.2 7.2 0 0 1 1.7-1.7l-.57-1.56 2.08-.86Z" fill="url(#settingsGlass)" fillOpacity=".2" stroke="url(#settingsGlass)" strokeWidth="1.25" strokeLinejoin="round" />
+                  <circle cx="12" cy="10.2" r="3.05" fill="rgb(35 20 22 / 72%)" stroke="#FF7A80" strokeWidth="1.25" />
+                  <circle cx="12" cy="10.2" r="1.05" fill="#FFE1DF" fillOpacity=".95" />
+                </svg>
+              </button>
+              {settingsOpen && (
+                <div className="glass-settings absolute left-0 top-[calc(100%+0.7rem)] z-50 w-60 overflow-hidden rounded-[1.4rem] border border-line p-2 text-right shadow-2xl">
+                  <p className="px-3 pb-2 pt-1 text-xs font-bold text-muted">تم</p>
+                  {([
+                    ["light", "☀", "روشن"],
+                    ["dark", "☾", "تاریک"],
+                    ["system", "▣", "سیستم"],
+                  ] as const).map(([value, icon, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => {
+                        setTheme(value);
+                        setSettingsOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
+                        theme === value
+                          ? "bg-de-gold/15 text-foreground"
+                          : "text-muted hover:bg-de-mist hover:text-foreground"
+                      }`}
+                    >
+                      <span className="text-base">{icon}</span>
+                      <span>{label}</span>
+                      <span className="w-4 text-center text-de-gold">{theme === value ? "✓" : ""}</span>
+                    </button>
+                  ))}
+                  <div className="my-2 border-t border-line" />
+                  <p className="px-3 pb-2 text-xs font-bold text-muted">زبان</p>
+                  <button
+                    type="button"
+                    disabled={!SHOW_LANGUAGE_SWITCHER}
+                    onClick={() => {
+                      if (!SHOW_LANGUAGE_SWITCHER) return;
+                      setLanguage(language === "fa" ? "en" : "fa");
+                    }}
+                    className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-semibold text-foreground transition hover:bg-de-mist disabled:cursor-default disabled:hover:bg-transparent"
+                  >
+                    <span className="text-base">◎</span>
+                    <span>{language === "fa" ? "فارسی" : "English"}</span>
+                    <span className="w-4 text-center text-de-gold">✓</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -1555,6 +1642,7 @@ export default function App() {
             </div>
           </section>
         )}
+        </div>
       </div>
 
       {authOpen && (

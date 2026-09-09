@@ -1,17 +1,22 @@
-export type Theme = "dark" | "light";
+export type Theme = "dark" | "light" | "system";
 
 export const THEME_STORAGE_KEY = "deutschquiz.theme";
 
 export function getStoredTheme(): Theme {
   try {
-    return localStorage.getItem(THEME_STORAGE_KEY) === "light" ? "light" : "dark";
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    return saved === "light" || saved === "system" ? saved : "dark";
   } catch {
     return "dark";
   }
 }
 
 export function applyTheme(theme: Theme) {
-  document.documentElement.classList.toggle("light", theme === "light");
+  const prefersLight = window.matchMedia("(prefers-color-scheme: light)").matches;
+  document.documentElement.classList.toggle(
+    "light",
+    theme === "light" || (theme === "system" && prefersLight),
+  );
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
   } catch {
@@ -19,8 +24,3 @@ export function applyTheme(theme: Theme) {
   }
 }
 
-export function toggleTheme(current: Theme): Theme {
-  const next: Theme = current === "dark" ? "light" : "dark";
-  applyTheme(next);
-  return next;
-}
