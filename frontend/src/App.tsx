@@ -677,6 +677,13 @@ export default function App() {
     }
     return <svg {...common}><defs><linearGradient id="translateGlass" x1="4" y1="22" x2="24" y2="6"><stop stopColor="#e54858"/><stop offset=".5" stopColor="#e7b84b"/><stop offset="1" stopColor="#fff" stopOpacity=".8"/></linearGradient></defs><path d="M5 7.5A3.5 3.5 0 0 1 8.5 4h11A3.5 3.5 0 0 1 23 7.5v7a3.5 3.5 0 0 1-3.5 3.5h-6.2L8 22v-4H8.5A3.5 3.5 0 0 1 5 14.5v-7Z" stroke="url(#translateGlass)" strokeWidth="1.6"/><path d="M10 8.5h5M12.5 7v1.5M10 15l2.3-4 2.3 4M11 13.2h2.7" stroke="#fff" strokeOpacity=".8" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>;
   }
+
+  function formatDuration(totalTimeMs: number) {
+    const totalSeconds = Math.max(0, Math.round(totalTimeMs / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
   const streak = useMemo(() => {
     const dayKey = (date: Date) =>
       `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -903,7 +910,7 @@ export default function App() {
                 [t.statAverage, `${Math.round(progress.averageScore)}٪`, "bg-surface-warm border-de-gold/40 text-foreground"],
                 [t.statBest, `${progress.bestScore}٪`, "bg-surface-rose border-de-rose/30 text-de-red"],
                 [t.statCorrect, `${progress.totalCorrectAnswers}/${progress.totalQuestionsAnswered}`, "bg-de-mist border-line text-foreground"],
-                [t.statTime, t.secondsShort(Math.round(progress.totalTimeMs / 1000)), "bg-surface border-line text-foreground"],
+                [t.statTime, formatDuration(progress.totalTimeMs), "bg-surface border-line text-foreground"],
               ] as const
             ).map(([label, value, tone]) => (
               <div key={label} className={`rounded-3xl border px-4 py-5 ${tone}`}>
@@ -1111,9 +1118,8 @@ export default function App() {
                       </div>
                       <div>
                         <span className="block text-sm font-bold text-foreground">
-                          {t.secondsShort(Math.round(attempt.totalTimeMs / 1000))}
+                          {formatDuration(attempt.totalTimeMs)}
                         </span>
-                        <span className="text-[11px] text-muted">{t.timeLabel}</span>
                       </div>
                     </div>
                   </div>
