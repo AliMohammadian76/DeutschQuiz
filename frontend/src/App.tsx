@@ -176,6 +176,7 @@ export default function App() {
   const [activePage, setActivePage] = useState<AppPage>("quizzes");
   const [pickerStep, setPickerStep] = useState<QuizPickerStep>("book");
   const [theme, setTheme] = useState<Theme>(() => getStoredTheme());
+  const [justFinishedScore, setJustFinishedScore] = useState<number | null>(null);
 
   useEffect(() => {
     document.documentElement.lang = uiLanguage;
@@ -236,7 +237,7 @@ export default function App() {
     setActivePage("quizzes");
   }
 
-  function finishQuizSession() {
+  function goToHome() {
     clearDraft();
     setQuizDraft(null);
     setQuizResult(null);
@@ -244,7 +245,14 @@ export default function App() {
     setQuizAnswers({});
     setQuizTimes({});
     setQuizIndex(0);
+    setQuizStartedAt("");
+    setQuizError("");
+    setPickerStep("book");
     setActivePage("quizzes");
+  }
+
+  function finishQuizSession() {
+    goToHome();
   }
 
   async function loadProgress(accessToken: string) {
@@ -398,9 +406,8 @@ export default function App() {
       }
       if (!response.ok) throw new Error(await getError(response, t.requestFailed));
       const result = (await response.json()) as AttemptResult;
-      clearDraft();
-      setQuizDraft(null);
-      setQuizResult(result);
+      setJustFinishedScore(Math.round(result.score));
+      goToHome();
       await loadProgress(token);
       await loadHistory(token);
     } catch (error) {
@@ -681,7 +688,13 @@ export default function App() {
               {(["quizzes", "progress", "history"] as const).map((page) => (
                 <button
                   key={page}
-                  onClick={() => setActivePage(page)}
+                  onClick={() => {
+                    setActivePage(page);
+                    if (page === "quizzes") {
+                      setPickerStep("book");
+                      setQuizResult(null);
+                    }
+                  }}
                   className={`rounded-full px-3 py-2 text-xs font-bold transition ${
                     activePage === page || (page === "quizzes" && activePage === "quiz")
                       ? "bg-de-red text-white"
@@ -731,6 +744,25 @@ export default function App() {
             )}
           </div>
         </header>
+
+        {justFinishedScore !== null &&
+          activePage === "quizzes" &&
+          pickerStep === "book" && (
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] border border-de-gold/35 bg-surface-warm px-4 py-3">
+            <p className="text-sm font-semibold text-foreground">
+              {uiLanguage === "fa"
+                ? `آزمون ثبت شد · نمره ${justFinishedScore}٪`
+                : `Quiz saved · score ${justFinishedScore}%`}
+            </p>
+            <button
+              type="button"
+              onClick={() => setJustFinishedScore(null)}
+              className="rounded-full border border-line bg-surface px-3 py-1.5 text-xs font-semibold text-muted"
+            >
+              {uiLanguage === "fa" ? "باشه" : "OK"}
+            </button>
+          </div>
+        )}
 
         {((activePage === "quizzes" && pickerStep === "book") ||
           (activePage !== "quizzes" && activePage !== "quiz")) && (
