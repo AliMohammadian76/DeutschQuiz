@@ -734,54 +734,33 @@ export default function App() {
 
         {((activePage === "quizzes" && pickerStep === "book") ||
           (activePage !== "quizzes" && activePage !== "quiz")) && (
-        <section className="mt-10 grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <div
-            className="animate-rise relative z-10 self-center"
-            style={{ animationDelay: "80ms" }}
-          >
-            <p className="font-display text-5xl font-extrabold leading-none tracking-tight text-foreground sm:text-7xl">
-              Deutsch<span className="text-de-red">Quiz</span>
-            </p>
-            <h1 className="mt-6 max-w-xl text-2xl font-bold leading-10 text-foreground sm:text-3xl">
-              {t.heroHeadline}
-            </h1>
-            <p className="mt-4 max-w-md text-sm leading-7 text-muted">
-              {t.heroSubcopy}
-            </p>
-            {activePage === "quizzes" && pickerStep === "book" && (
+        <section
+          className="animate-rise mt-12 max-w-2xl"
+          style={{ animationDelay: "80ms" }}
+        >
+          <h1 className="text-2xl font-bold leading-10 text-foreground sm:text-4xl sm:leading-12">
+            {t.heroHeadline}
+          </h1>
+          <p className="mt-4 max-w-md text-sm leading-7 text-muted">
+            {t.heroSubcopy}
+          </p>
+          {activePage === "quizzes" && pickerStep === "book" && (
+            <div className="mt-8 flex flex-wrap items-center gap-3">
               <button
                 type="button"
                 onClick={scrollToBooks}
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-sm font-bold text-background shadow-lg transition hover:bg-de-gold hover:text-de-black"
+                className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-sm font-bold text-background shadow-lg transition hover:bg-de-gold hover:text-de-black"
               >
                 {t.startQuiz}
                 <span aria-hidden>←</span>
               </button>
-            )}
-          </div>
-
-          <div
-            className="animate-flag relative flex min-h-[280px] items-center justify-center overflow-visible rounded-[2rem] border border-line bg-surface p-6 lg:min-h-[360px]"
-            style={{ animationDelay: "200ms" }}
-          >
-            <span className="pill-float absolute start-2 top-8 text-foreground sm:start-6">
-              {t.categoryVocabulary}
-            </span>
-            <span className="pill-float absolute end-3 top-16 bg-surface-warm text-foreground sm:end-8">
-              {t.categoryGrammar}
-            </span>
-            <span className="pill-float absolute bottom-10 start-6 bg-surface-rose text-foreground sm:start-10">
-              {t.categoryMixed}
-            </span>
-            <span className="pill-float absolute bottom-16 end-4 text-foreground sm:end-10">
-              A1–B1
-            </span>
-            <img
-              src="/germany-flag-map.png"
-              alt="Deutschland"
-              className="relative z-10 max-h-[260px] w-auto max-w-full object-contain drop-shadow-lg lg:max-h-[300px]"
-            />
-          </div>
+              <div className="flex flex-wrap gap-2">
+                <span className="pill-float text-foreground">{t.categoryVocabulary}</span>
+                <span className="pill-float bg-surface-warm text-foreground">{t.categoryGrammar}</span>
+                <span className="pill-float bg-surface-rose text-foreground">{t.categoryMixed}</span>
+              </div>
+            </div>
+          )}
         </section>
         )}
 
