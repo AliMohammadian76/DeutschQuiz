@@ -722,10 +722,6 @@ export default function App() {
 
   return (
     <main className="glass-page min-h-screen bg-background text-foreground">
-      <div className="de-flag h-1.5 w-full animate-flag" aria-hidden>
-        <span /><span /><span />
-      </div>
-
       <div className="app-shell glass-frame mx-auto max-w-6xl gap-5 px-5 py-6 sm:px-8">
         <aside className="app-sidebar">
           <div className="app-sidebar__brand">
@@ -918,7 +914,7 @@ export default function App() {
           </section>
         )}
 
-        {token && activePage !== "quiz" && activePage !== "translator" && (
+        {token && activePage === "quizzes" && (
           <section className="mt-8 overflow-hidden rounded-[2rem] border border-de-gold/25 bg-surface-warm p-5 sm:p-6">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
