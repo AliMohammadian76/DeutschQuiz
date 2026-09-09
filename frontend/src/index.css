@@ -1,26 +1,27 @@
 @import "tailwindcss";
 
-/* Dark theme is the default */
+/* Dark theme is the default. Keep the darkest tones charcoal rather than pure
+   black so large surfaces stay comfortable to read for longer sessions. */
 :root {
-  --de-black: #0a0a0a;
-  --de-red: #e11d2e;
-  --de-gold: #f5c518;
-  --de-rose: #ff6b6b;
-  --de-amber: #ffb703;
-  --de-cream: #1a1a1a;
-  --de-mist: #161616;
-  --background: #050505;
-  --foreground: #f4f4f5;
-  --muted: #9b9590;
-  --line: #2a2a2a;
-  --surface: #121212;
-  --surface-warm: #1c1810;
-  --surface-rose: #1f1214;
-  --surface-ink: #000000;
-  --success: #34d399;
-  --success-bg: #0f2419;
+  --de-black: #171a20;
+  --de-red: #e54858;
+  --de-gold: #e7b84b;
+  --de-rose: #f07a83;
+  --de-amber: #e7a83b;
+  --de-cream: #252932;
+  --de-mist: #222630;
+  --background: #111318;
+  --foreground: #f1f3f6;
+  --muted: #a7afbd;
+  --line: #353b48;
+  --surface: rgb(31 27 25 / 62%);
+  --surface-warm: rgb(86 58 21 / 52%);
+  --surface-rose: rgb(91 24 24 / 53%);
+  --surface-ink: rgb(27 23 22 / 68%);
+  --success: #43c995;
+  --success-bg: #172b26;
   --success-border: rgb(52 211 153 / 35%);
-  --card-shadow: 0 12px 40px rgb(0 0 0 / 35%);
+  --card-shadow: 0 14px 36px rgb(0 0 0 / 24%);
 }
 
 html.light {
@@ -35,10 +36,10 @@ html.light {
   --foreground: #141414;
   --muted: #6b6458;
   --line: #e4ddd0;
-  --surface: #fffcf8;
-  --surface-warm: #fff6e0;
-  --surface-rose: #fff0f0;
-  --surface-ink: #1c1c1c;
+  --surface: rgb(255 252 248 / 78%);
+  --surface-warm: rgb(255 246 224 / 82%);
+  --surface-rose: rgb(255 240 240 / 82%);
+  --surface-ink: rgb(28 28 28 / 88%);
   --success: #059669;
   --success-bg: #ecfdf5;
   --success-border: rgb(16 185 129 / 40%);
@@ -71,8 +72,6 @@ body {
   margin: 0;
   min-height: 100%;
   background:
-    radial-gradient(ellipse 55% 40% at 100% 0%, rgb(225 29 46 / 12%), transparent 55%),
-    radial-gradient(ellipse 45% 35% at 0% 100%, rgb(245 197 24 / 8%), transparent 50%),
     var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
@@ -90,6 +89,91 @@ html.light body {
   box-sizing: border-box;
 }
 
+.glass-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  background:
+    linear-gradient(rgb(10 8 8 / 45%), rgb(10 8 8 / 62%)),
+    url("/images/german-glass-bg.png") center / cover fixed,
+    var(--background);
+}
+
+.glass-page::before {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  background:
+    radial-gradient(circle at 15% 20%, rgb(231 184 75 / 13%), transparent 25rem),
+    radial-gradient(circle at 82% 78%, rgb(229 72 88 / 11%), transparent 28rem);
+  pointer-events: none;
+}
+
+.glass-frame {
+  position: relative;
+}
+
+.glass-header {
+  margin-top: 0.6rem;
+  border: 1px solid rgb(255 235 202 / 22%);
+  border-bottom-color: rgb(255 235 202 / 18%);
+  border-radius: 1.5rem;
+  padding: 1rem 1.25rem;
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 13%), rgb(255 255 255 / 3%) 55%, rgb(231 184 75 / 7%)),
+    rgb(24 19 18 / 52%);
+  box-shadow: inset 0 1px rgb(255 255 255 / 18%), 0 18px 55px rgb(0 0 0 / 28%);
+  backdrop-filter: blur(24px) saturate(130%);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+}
+
+/* Every product surface becomes a true glass layer: translucent fill, a bright
+   top edge, diffuse shadow and background blur. This affects the existing
+   Tailwind surface utilities without rewriting page-by-page markup. */
+.glass-frame :is([class*="bg-surface"], [class*="bg-de-mist"], [class*="bg-surface-ink"], .card-soft, .pill-float) {
+  border-color: rgb(255 235 202 / 20%);
+  background-color: rgb(35 29 27 / 58%);
+  background-image: linear-gradient(135deg, rgb(255 255 255 / 12%), rgb(255 255 255 / 3%) 52%, rgb(231 184 75 / 6%));
+  box-shadow: inset 0 1px rgb(255 255 255 / 16%), inset 0 -1px rgb(0 0 0 / 18%), 0 12px 32px rgb(0 0 0 / 20%);
+  backdrop-filter: blur(22px) saturate(135%);
+  -webkit-backdrop-filter: blur(22px) saturate(135%);
+}
+
+.glass-frame :is([class*="bg-surface-warm"], [class*="bg-de-gold"]) {
+  background-image: linear-gradient(135deg, rgb(255 232 167 / 20%), rgb(180 107 15 / 18%));
+}
+
+.glass-frame :is([class*="bg-surface-rose"], [class*="bg-de-red"]) {
+  background-image: linear-gradient(135deg, rgb(255 184 176 / 17%), rgb(138 20 23 / 19%));
+}
+
+.glass-frame .border-line,
+.glass-header .border-line {
+  border-color: rgb(255 235 202 / 20%);
+}
+
+.glass-frame button {
+  transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.glass-frame button:hover:not(:disabled) {
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%), inset 0 1px rgb(255 255 255 / 17%);
+}
+
+html.light .glass-page {
+  background:
+    linear-gradient(rgb(255 250 241 / 47%), rgb(255 248 235 / 58%)),
+    url("/images/german-glass-bg.png") center / cover fixed,
+    var(--background);
+}
+
+html.light .glass-frame :is([class*="bg-surface"], [class*="bg-de-mist"], [class*="bg-surface-ink"], .card-soft, .pill-float) {
+  border-color: rgb(106 73 36 / 18%);
+  background-color: rgb(255 253 248 / 65%);
+  box-shadow: inset 0 1px rgb(255 255 255 / 72%), 0 12px 32px rgb(72 44 16 / 12%);
+}
+
 .font-display {
   font-family: var(--font-display);
 }
@@ -101,7 +185,7 @@ html.light body {
 }
 
 .de-flag > span:nth-child(1) {
-  background: #0a0a0a;
+  background: #171a20;
 }
 
 .de-flag > span:nth-child(2) {

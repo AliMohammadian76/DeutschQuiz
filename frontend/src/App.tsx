@@ -706,13 +706,13 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="glass-page min-h-screen bg-background text-foreground">
       <div className="de-flag h-1.5 w-full animate-flag" aria-hidden>
         <span /><span /><span />
       </div>
 
-      <div className="mx-auto max-w-6xl px-5 py-6 sm:px-8">
-        <header className="animate-rise flex flex-wrap items-center justify-between gap-3 border-b border-line pb-5">
+      <div className="glass-frame mx-auto max-w-6xl px-5 py-6 sm:px-8">
+        <header className="glass-header animate-rise flex flex-wrap items-center justify-between gap-3 border-b border-line pb-5">
           <div className="flex items-center gap-3">
             <div className="de-flag h-10 w-8 shrink-0 rounded-xl shadow-md" aria-hidden>
               <span /><span /><span />
@@ -1065,69 +1065,87 @@ export default function App() {
         )}
 
         {activePage === "translator" && (
-          <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 sm:p-7">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-de-red">
-                  {t.translator}
-                </p>
-                <h2 className="mt-2 font-display text-2xl font-bold text-foreground">
-                  {t.translatorHeading}
-                </h2>
-                <p className="mt-2 text-sm text-muted">{t.translatorSubcopy}</p>
+          <section className="mt-12 overflow-hidden rounded-[2rem] border border-line bg-surface shadow-[var(--card-shadow)]">
+            <div className="border-b border-line px-5 py-5 sm:px-7">
+              <p className="text-xs font-bold uppercase tracking-wider text-de-red">{t.translator}</p>
+              <div className="mt-2 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <h2 className="font-display text-2xl font-bold text-foreground">{t.translatorHeading}</h2>
+                <p className="text-sm text-muted">{t.translatorSubcopy}</p>
               </div>
             </div>
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <label className="flex flex-col gap-2 text-sm font-semibold text-foreground">
-                <span>{t.translationDirectionLabel}</span>
-                <select
-                  value={translationDirection}
-                  onChange={(event) =>
-                    setTranslationDirection(event.target.value as TranslationDirection)
-                  }
-                  className="rounded-2xl border border-line bg-de-mist px-4 py-3 text-sm text-foreground outline-none focus:border-de-gold"
+
+            <div className="p-4 sm:p-6">
+              <div className="grid items-stretch gap-3 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+                <div className="overflow-hidden rounded-2xl border border-line bg-de-mist/70">
+                  <div className="flex items-center justify-between border-b border-line px-4 py-3">
+                    <span className="text-sm font-bold text-foreground">
+                      {translationDirection === "de-fa"
+                        ? t.translationDirectionDeToFa.split(/ → | -> /)[0]
+                        : t.translationDirectionFaToDe.split(/ → | -> /)[0]}
+                    </span>
+                    <span className="rounded-full bg-surface px-2.5 py-1 text-[11px] font-semibold text-muted">{t.translatorInputLabel}</span>
+                  </div>
+                  <textarea
+                    value={translationInput}
+                    onChange={(event) => setTranslationInput(event.target.value)}
+                    rows={8}
+                    placeholder={t.translatorInputPlaceholder}
+                    className="min-h-[15rem] w-full resize-none border-0 bg-transparent px-4 py-4 text-base leading-8 text-foreground outline-none placeholder:text-muted focus:ring-0"
+                    dir={translationDirection === "fa-de" ? "rtl" : "ltr"}
+                  />
+                  <div className="flex justify-end px-3 pb-3">
+                    <span className="text-[11px] text-muted">{translationInput.length}</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  aria-label={t.translationDirectionLabel}
+                  onClick={() => {
+                    setTranslationDirection((current) => (current === "de-fa" ? "fa-de" : "de-fa"));
+                    setTranslationInput(translationOutput);
+                    setTranslationOutput(translationInput);
+                  }}
+                  className="self-center rounded-full border border-line bg-surface p-3 text-lg text-muted transition hover:border-de-gold hover:bg-de-mist hover:text-de-gold"
                 >
-                  <option value="de-fa">{t.translationDirectionDeToFa}</option>
-                  <option value="fa-de">{t.translationDirectionFaToDe}</option>
-                </select>
-              </label>
-            </div>
-            <div className="mt-5 grid gap-4 lg:grid-cols-2">
-              <label className="flex flex-col gap-2 text-sm font-semibold text-foreground">
-                <span>{t.translatorInputLabel}</span>
-                <textarea
-                  value={translationInput}
-                  onChange={(event) => setTranslationInput(event.target.value)}
-                  rows={8}
-                  placeholder={t.translatorInputPlaceholder}
-                  className="min-h-[12rem] rounded-2xl border border-line bg-de-mist px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted focus:border-de-gold"
-                />
-              </label>
-              <label className="flex flex-col gap-2 text-sm font-semibold text-foreground">
-                <span>{t.translatorOutputLabel}</span>
-                <textarea
-                  value={translationOutput}
-                  readOnly
-                  rows={8}
-                  placeholder={t.translatorOutputPlaceholder}
-                  className="min-h-[12rem] rounded-2xl border border-line bg-de-mist/60 px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted"
-                />
-              </label>
-            </div>
+                  ⇄
+                </button>
+
+                <div className="overflow-hidden rounded-2xl border border-line bg-surface-ink/60">
+                  <div className="flex items-center justify-between border-b border-line px-4 py-3">
+                    <span className="text-sm font-bold text-foreground">
+                      {translationDirection === "de-fa"
+                        ? t.translationDirectionDeToFa.split(/ → | -> /)[1]
+                        : t.translationDirectionFaToDe.split(/ → | -> /)[1]}
+                    </span>
+                    <span className="rounded-full bg-de-mist px-2.5 py-1 text-[11px] font-semibold text-muted">{t.translatorOutputLabel}</span>
+                  </div>
+                  <textarea
+                    value={translationOutput}
+                    readOnly
+                    rows={8}
+                    placeholder={t.translatorOutputPlaceholder}
+                    className="min-h-[15rem] w-full resize-none border-0 bg-transparent px-4 py-4 text-base leading-8 text-foreground outline-none placeholder:text-muted focus:ring-0"
+                    dir={translationDirection === "de-fa" ? "rtl" : "ltr"}
+                  />
+                </div>
+              </div>
+
             {translationError && (
               <p className="mt-4 rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-xs font-semibold text-de-red">
                 {translationError}
               </p>
             )}
-            <div className="mt-5">
+            <div className="mt-5 flex justify-end">
               <button
                 type="button"
                 onClick={() => void translateText()}
                 disabled={translationLoading}
-                className="rounded-2xl bg-de-red px-5 py-3 text-sm font-bold text-white shadow-md shadow-de-red/20 disabled:opacity-60"
+                className="rounded-xl bg-de-red px-6 py-3 text-sm font-bold text-white shadow-md shadow-de-red/20 transition hover:brightness-110 disabled:opacity-60"
               >
                 {translationLoading ? t.translating : t.translateAction}
               </button>
+            </div>
             </div>
           </section>
         )}
