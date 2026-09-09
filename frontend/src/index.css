@@ -68,6 +68,18 @@ html.light {
   --font-display: "Syne", "Vazirmatn", sans-serif;
 }
 
+html,
+body,
+#root {
+  min-height: 100%;
+  max-width: 100%;
+}
+
+html,
+body {
+  overflow-x: clip;
+}
+
 body {
   margin: 0;
   min-height: 100%;
@@ -94,8 +106,8 @@ html.light body {
   isolation: isolate;
   min-height: 100vh;
   background:
-    linear-gradient(rgb(10 8 8 / 45%), rgb(10 8 8 / 62%)),
-    url("/images/german-glass-bg.png") center / cover fixed,
+    linear-gradient(rgb(10 8 8 / 31%), rgb(10 8 8 / 48%)),
+    url("/images/german-glass-bg-minimal.png") center / cover fixed,
     var(--background);
 }
 
@@ -105,8 +117,8 @@ html.light body {
   inset: 0;
   content: "";
   background:
-    radial-gradient(circle at 15% 20%, rgb(231 184 75 / 13%), transparent 25rem),
-    radial-gradient(circle at 82% 78%, rgb(229 72 88 / 11%), transparent 28rem);
+    radial-gradient(circle at 15% 20%, rgb(231 184 75 / 18%), transparent 25rem),
+    radial-gradient(circle at 82% 78%, rgb(229 72 88 / 15%), transparent 28rem);
   pointer-events: none;
 }
 
@@ -121,11 +133,11 @@ html.light body {
   border-radius: 1.5rem;
   padding: 1rem 1.25rem;
   background:
-    linear-gradient(135deg, rgb(255 255 255 / 13%), rgb(255 255 255 / 3%) 55%, rgb(231 184 75 / 7%)),
-    rgb(24 19 18 / 52%);
-  box-shadow: inset 0 1px rgb(255 255 255 / 18%), 0 18px 55px rgb(0 0 0 / 28%);
-  backdrop-filter: blur(24px) saturate(130%);
-  -webkit-backdrop-filter: blur(24px) saturate(130%);
+    linear-gradient(135deg, rgb(255 255 255 / 18%), rgb(255 255 255 / 4%) 55%, rgb(231 184 75 / 9%)),
+    rgb(24 19 18 / 43%);
+  box-shadow: inset 0 1px rgb(255 255 255 / 22%), 0 18px 55px rgb(0 0 0 / 28%);
+  backdrop-filter: blur(30px) saturate(145%);
+  -webkit-backdrop-filter: blur(30px) saturate(145%);
 }
 
 /* Every product surface becomes a true glass layer: translucent fill, a bright
@@ -133,11 +145,11 @@ html.light body {
    Tailwind surface utilities without rewriting page-by-page markup. */
 .glass-frame :is([class*="bg-surface"], [class*="bg-de-mist"], [class*="bg-surface-ink"], .card-soft, .pill-float) {
   border-color: rgb(255 235 202 / 20%);
-  background-color: rgb(35 29 27 / 58%);
-  background-image: linear-gradient(135deg, rgb(255 255 255 / 12%), rgb(255 255 255 / 3%) 52%, rgb(231 184 75 / 6%));
-  box-shadow: inset 0 1px rgb(255 255 255 / 16%), inset 0 -1px rgb(0 0 0 / 18%), 0 12px 32px rgb(0 0 0 / 20%);
-  backdrop-filter: blur(22px) saturate(135%);
-  -webkit-backdrop-filter: blur(22px) saturate(135%);
+  background-color: rgb(35 29 27 / 46%);
+  background-image: linear-gradient(135deg, rgb(255 255 255 / 17%), rgb(255 255 255 / 3%) 52%, rgb(231 184 75 / 8%));
+  box-shadow: inset 0 1px rgb(255 255 255 / 20%), inset 0 -1px rgb(0 0 0 / 18%), 0 12px 32px rgb(0 0 0 / 20%);
+  backdrop-filter: blur(28px) saturate(145%);
+  -webkit-backdrop-filter: blur(28px) saturate(145%);
 }
 
 .glass-frame :is([class*="bg-surface-warm"], [class*="bg-de-gold"]) {
@@ -164,7 +176,7 @@ html.light body {
 html.light .glass-page {
   background:
     linear-gradient(rgb(255 250 241 / 47%), rgb(255 248 235 / 58%)),
-    url("/images/german-glass-bg.png") center / cover fixed,
+    url("/images/german-glass-bg-minimal.png") center / cover fixed,
     var(--background);
 }
 
