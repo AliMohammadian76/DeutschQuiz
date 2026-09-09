@@ -1,6 +1,7 @@
 using DeutschQuiz.Application;
 using DeutschQuiz.Infrastructure;
 using DeutschQuiz.Infrastructure.Persistence;
+using DeutschQuiz.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text.Json.Serialization;
@@ -12,6 +13,7 @@ builder.Services
     .AddControllers()
     .AddJsonOptions(options =>
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+builder.Services.AddHttpClient<ITranslationService, GoogleCloudTranslationService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DeutschQuiz");
 var databaseEnabled = !string.IsNullOrWhiteSpace(connectionString);

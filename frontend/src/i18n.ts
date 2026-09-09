@@ -18,6 +18,7 @@ type Messages = {
   startQuiz: string;
   preparing: string;
   progress: string;
+  translator: string;
   questionsReady: string;
   pickLesson: string;
   levelLabel: (level: string) => string;
@@ -87,6 +88,19 @@ type Messages = {
   lessonsUnavailable: string;
   fetchLessonsFailed: string;
   genericError: string;
+  translatorHeading: string;
+  translatorSubcopy: string;
+  translatorInputLabel: string;
+  translatorOutputLabel: string;
+  translatorInputPlaceholder: string;
+  translatorOutputPlaceholder: string;
+  translateAction: string;
+  translating: string;
+  translationDirectionLabel: string;
+  translationDirectionDeToFa: string;
+  translationDirectionFaToDe: string;
+  translationTextRequired: string;
+  translationFailed: string;
 };
 
 const fa: Messages = {
@@ -101,6 +115,7 @@ const fa: Messages = {
   startQuiz: "شروع آزمون",
   preparing: "آماده‌سازی...",
   progress: "پیشرفت",
+  translator: "مترجم",
   questionsReady: "۲۰ سؤال آماده",
   pickLesson: "درس را انتخاب کن",
   levelLabel: (level) => `سطح ${level}`,
@@ -180,6 +195,19 @@ const fa: Messages = {
   lessonsUnavailable: "فهرست درس‌ها در دسترس نیست.",
   fetchLessonsFailed: "دریافت درس‌ها انجام نشد.",
   genericError: "خطایی رخ داد.",
+  translatorHeading: "مترجم آلمانی/فارسی",
+  translatorSubcopy: "متن دلخواه را وارد کن و ترجمه‌ی سریع بگیر.",
+  translatorInputLabel: "متن ورودی",
+  translatorOutputLabel: "ترجمه",
+  translatorInputPlaceholder: "مثلاً: Guten Morgen یا سلام، حالت چطوره؟",
+  translatorOutputPlaceholder: "خروجی ترجمه اینجا نمایش داده می‌شود.",
+  translateAction: "ترجمه",
+  translating: "در حال ترجمه...",
+  translationDirectionLabel: "جهت ترجمه",
+  translationDirectionDeToFa: "آلمانی → فارسی",
+  translationDirectionFaToDe: "فارسی → آلمانی",
+  translationTextRequired: "لطفاً متن ورودی را وارد کن.",
+  translationFailed: "ترجمه انجام نشد.",
 };
 
 const en: Messages = {
@@ -194,6 +222,7 @@ const en: Messages = {
   startQuiz: "Start quiz",
   preparing: "Preparing...",
   progress: "Progress",
+  translator: "Translator",
   questionsReady: "20 questions ready",
   pickLesson: "Pick a lesson",
   levelLabel: (level) => `Level ${level}`,
@@ -273,6 +302,19 @@ const en: Messages = {
   lessonsUnavailable: "Lesson list is unavailable.",
   fetchLessonsFailed: "Could not load lessons.",
   genericError: "Something went wrong.",
+  translatorHeading: "German/Persian Translator",
+  translatorSubcopy: "Enter any text and get a quick translation.",
+  translatorInputLabel: "Input text",
+  translatorOutputLabel: "Translation",
+  translatorInputPlaceholder: "Example: Guten Morgen or سلام، حالت چطوره؟",
+  translatorOutputPlaceholder: "Translated text appears here.",
+  translateAction: "Translate",
+  translating: "Translating...",
+  translationDirectionLabel: "Direction",
+  translationDirectionDeToFa: "German -> Persian",
+  translationDirectionFaToDe: "Persian -> German",
+  translationTextRequired: "Please enter text to translate.",
+  translationFailed: "Could not translate the text.",
 };
 
 const catalogs: Record<Language, Messages> = { fa, en };

@@ -49,8 +49,9 @@ const quizModeMeta = [
 ] as const;
 
 type AuthMode = "login" | "register";
-type AppPage = "quizzes" | "progress" | "history" | "quiz";
+type AppPage = "quizzes" | "progress" | "history" | "quiz" | "translator";
 type QuizPickerStep = "book" | "level" | "lesson" | "mode";
+type TranslationDirection = "de-fa" | "fa-de";
 type AuthResult = { accessToken: string; user: { displayName: string } };
 type Lesson = {
   id: string;
@@ -177,6 +178,12 @@ export default function App() {
   const [pickerStep, setPickerStep] = useState<QuizPickerStep>("book");
   const [theme, setTheme] = useState<Theme>(() => getStoredTheme());
   const [justFinishedScore, setJustFinishedScore] = useState<number | null>(null);
+  const [translationInput, setTranslationInput] = useState("");
+  const [translationOutput, setTranslationOutput] = useState("");
+  const [translationDirection, setTranslationDirection] =
+    useState<TranslationDirection>("de-fa");
+  const [translationLoading, setTranslationLoading] = useState(false);
+  const [translationError, setTranslationError] = useState("");
 
   useEffect(() => {
     document.documentElement.lang = uiLanguage;
@@ -513,6 +520,40 @@ export default function App() {
     setAuthOpen(true);
   }
 
+  async function translateText() {
+    const input = translationInput.trim();
+    if (!input) {
+      setTranslationError(t.translationTextRequired);
+      return;
+    }
+
+    const sourceLang = translationDirection === "de-fa" ? "de" : "fa";
+    const targetLang = translationDirection === "de-fa" ? "fa" : "de";
+    setTranslationLoading(true);
+    setTranslationError("");
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/translate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: input,
+          sourceLang,
+          targetLang,
+        }),
+      });
+      if (!response.ok) throw new Error(await getError(response, t.translationFailed));
+      const result = (await response.json()) as { translatedText: string };
+      setTranslationOutput(result.translatedText ?? "");
+    } catch (error) {
+      setTranslationError(
+        error instanceof Error ? error.message : t.translationFailed,
+      );
+    } finally {
+      setTranslationLoading(false);
+    }
+  }
+
   const activeQuestion = quizQuestions[quizIndex];
   const selectedLesson = lessons.find((lesson) => lesson.id === selectedLessonId);
   const bookOptions: BookOption[] = Array.from(
@@ -612,8 +653,8 @@ export default function App() {
 
   const textAlign = uiLanguage === "en" ? "text-left" : "text-right";
   const pageLabels = uiLanguage === "fa"
-    ? { quizzes: "آزمون‌ها", progress: "پیشرفت", history: "تاریخچه آزمون‌ها" }
-    : { quizzes: "Quizzes", progress: "Progress", history: "Quiz history" };
+    ? { quizzes: "آزمون‌ها", progress: "پیشرفت", history: "تاریخچه آزمون‌ها", translator: "مترجم" }
+    : { quizzes: "Quizzes", progress: "Progress", history: "Quiz history", translator: "Translator" };
   const streak = useMemo(() => {
     const dayKey = (date: Date) =>
       `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -685,7 +726,7 @@ export default function App() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <nav className="flex items-center gap-1 rounded-full border border-line bg-surface p-1" aria-label="Main navigation">
-              {(["quizzes", "progress", "history"] as const).map((page) => (
+              {(["quizzes", "progress", "history", "translator"] as const).map((page) => (
                 <button
                   key={page}
                   onClick={() => {
@@ -765,7 +806,7 @@ export default function App() {
         )}
 
         {((activePage === "quizzes" && pickerStep === "book") ||
-          (activePage !== "quizzes" && activePage !== "quiz")) && (
+          (activePage !== "quizzes" && activePage !== "quiz" && activePage !== "translator")) && (
         <section
           className="animate-rise mt-12 max-w-2xl"
           style={{ animationDelay: "80ms" }}
@@ -796,7 +837,7 @@ export default function App() {
         </section>
         )}
 
-        {activePage !== "quizzes" && activePage !== "quiz" && progress && (
+        {activePage !== "quizzes" && activePage !== "quiz" && activePage !== "translator" && progress && (
           <section className="mt-12 grid gap-3 sm:grid-cols-4">
             {(
               [
@@ -814,7 +855,7 @@ export default function App() {
           </section>
         )}
 
-        {token && activePage !== "quiz" && (
+        {token && activePage !== "quiz" && activePage !== "translator" && (
           <section className="mt-8 overflow-hidden rounded-[2rem] border border-de-gold/25 bg-surface-warm p-5 sm:p-6">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
@@ -1020,6 +1061,74 @@ export default function App() {
                 ))}
               </div>
             )}
+          </section>
+        )}
+
+        {activePage === "translator" && (
+          <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 sm:p-7">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-de-red">
+                  {t.translator}
+                </p>
+                <h2 className="mt-2 font-display text-2xl font-bold text-foreground">
+                  {t.translatorHeading}
+                </h2>
+                <p className="mt-2 text-sm text-muted">{t.translatorSubcopy}</p>
+              </div>
+            </div>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <label className="flex flex-col gap-2 text-sm font-semibold text-foreground">
+                <span>{t.translationDirectionLabel}</span>
+                <select
+                  value={translationDirection}
+                  onChange={(event) =>
+                    setTranslationDirection(event.target.value as TranslationDirection)
+                  }
+                  className="rounded-2xl border border-line bg-de-mist px-4 py-3 text-sm text-foreground outline-none focus:border-de-gold"
+                >
+                  <option value="de-fa">{t.translationDirectionDeToFa}</option>
+                  <option value="fa-de">{t.translationDirectionFaToDe}</option>
+                </select>
+              </label>
+            </div>
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              <label className="flex flex-col gap-2 text-sm font-semibold text-foreground">
+                <span>{t.translatorInputLabel}</span>
+                <textarea
+                  value={translationInput}
+                  onChange={(event) => setTranslationInput(event.target.value)}
+                  rows={8}
+                  placeholder={t.translatorInputPlaceholder}
+                  className="min-h-[12rem] rounded-2xl border border-line bg-de-mist px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted focus:border-de-gold"
+                />
+              </label>
+              <label className="flex flex-col gap-2 text-sm font-semibold text-foreground">
+                <span>{t.translatorOutputLabel}</span>
+                <textarea
+                  value={translationOutput}
+                  readOnly
+                  rows={8}
+                  placeholder={t.translatorOutputPlaceholder}
+                  className="min-h-[12rem] rounded-2xl border border-line bg-de-mist/60 px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted"
+                />
+              </label>
+            </div>
+            {translationError && (
+              <p className="mt-4 rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-xs font-semibold text-de-red">
+                {translationError}
+              </p>
+            )}
+            <div className="mt-5">
+              <button
+                type="button"
+                onClick={() => void translateText()}
+                disabled={translationLoading}
+                className="rounded-2xl bg-de-red px-5 py-3 text-sm font-bold text-white shadow-md shadow-de-red/20 disabled:opacity-60"
+              >
+                {translationLoading ? t.translating : t.translateAction}
+              </button>
+            </div>
           </section>
         )}
 
@@ -1332,7 +1441,7 @@ export default function App() {
                 </div>
               ) : activeQuestion ? (
                 <>
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-4">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-wider text-de-red">
                         {quizCategory === "Vocabulary"
@@ -1346,13 +1455,6 @@ export default function App() {
                       </h2>
                       <p className="mt-1 text-xs text-muted">{t.resumeHint}</p>
                     </div>
-                    <button
-                      onClick={exitQuizPage}
-                      disabled={quizSubmitting}
-                      className="rounded-full border border-line px-3 py-1.5 text-xs font-semibold text-muted hover:bg-de-mist disabled:opacity-40"
-                    >
-                      {t.exitQuiz}
-                    </button>
                   </div>
                   <div className="mt-5 h-2 overflow-hidden rounded-full bg-line">
                     <div
