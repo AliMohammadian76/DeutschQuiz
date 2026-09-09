@@ -17,6 +17,15 @@
     <title>DeutschQuiz | آزمون آلمانی</title>
   </head>
   <body class="min-h-full">
+    <script>
+      (function () {
+        try {
+          if (localStorage.getItem("deutschquiz.theme") === "light") {
+            document.documentElement.classList.add("light");
+          }
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

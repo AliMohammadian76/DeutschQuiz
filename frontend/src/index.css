@@ -1,21 +1,48 @@
 @import "tailwindcss";
 
+/* Dark theme is the default */
 :root {
+  --de-black: #0a0a0a;
+  --de-red: #e11d2e;
+  --de-gold: #f5c518;
+  --de-rose: #ff6b6b;
+  --de-amber: #ffb703;
+  --de-cream: #1a1a1a;
+  --de-mist: #161616;
+  --background: #050505;
+  --foreground: #f4f4f5;
+  --muted: #9b9590;
+  --line: #2a2a2a;
+  --surface: #121212;
+  --surface-warm: #1c1810;
+  --surface-rose: #1f1214;
+  --surface-ink: #000000;
+  --success: #34d399;
+  --success-bg: #0f2419;
+  --success-border: rgb(52 211 153 / 35%);
+  --card-shadow: 0 12px 40px rgb(0 0 0 / 35%);
+}
+
+html.light {
   --de-black: #141414;
   --de-red: #e11d2e;
   --de-gold: #f5c518;
   --de-rose: #ff6b6b;
   --de-amber: #ffb703;
-  --de-cream: #fff8e8;
-  --de-mist: #f3efe6;
-  --background: #f7f2e8;
+  --de-cream: #f7f3ea;
+  --de-mist: #f0ebe3;
+  --background: #f6f4ef;
   --foreground: #141414;
   --muted: #6b6458;
-  --line: #e8dfd0;
-  --surface: #fffcf6;
-  --surface-warm: #fff4d6;
+  --line: #e4ddd0;
+  --surface: #fffcf8;
+  --surface-warm: #fff6e0;
   --surface-rose: #fff0f0;
   --surface-ink: #1c1c1c;
+  --success: #059669;
+  --success-bg: #ecfdf5;
+  --success-border: rgb(16 185 129 / 40%);
+  --card-shadow: 0 10px 30px rgb(20 20 20 / 6%);
 }
 
 @theme inline {
@@ -34,6 +61,8 @@
   --color-surface-warm: var(--surface-warm);
   --color-surface-rose: var(--surface-rose);
   --color-surface-ink: var(--surface-ink);
+  --color-success: var(--success);
+  --color-success-bg: var(--success-bg);
   --font-sans: "Vazirmatn", system-ui, sans-serif;
   --font-display: "Syne", "Vazirmatn", sans-serif;
 }
@@ -42,12 +71,19 @@ body {
   margin: 0;
   min-height: 100%;
   background:
-    radial-gradient(ellipse 70% 45% at 90% -10%, rgb(245 197 24 / 35%), transparent 55%),
-    radial-gradient(ellipse 55% 40% at 0% 100%, rgb(225 29 46 / 14%), transparent 50%),
-    radial-gradient(ellipse 40% 30% at 50% 50%, rgb(255 248 232 / 80%), transparent 70%),
+    radial-gradient(ellipse 55% 40% at 100% 0%, rgb(225 29 46 / 12%), transparent 55%),
+    radial-gradient(ellipse 45% 35% at 0% 100%, rgb(245 197 24 / 8%), transparent 50%),
     var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+html.light body {
+  background:
+    radial-gradient(ellipse 60% 40% at 100% -5%, rgb(245 197 24 / 18%), transparent 55%),
+    radial-gradient(ellipse 50% 35% at 0% 100%, rgb(225 29 46 / 8%), transparent 50%),
+    var(--background);
 }
 
 * {
@@ -65,7 +101,7 @@ body {
 }
 
 .de-flag > span:nth-child(1) {
-  background: var(--de-black);
+  background: #0a0a0a;
 }
 
 .de-flag > span:nth-child(2) {
@@ -80,7 +116,18 @@ body {
   border-radius: 1.5rem;
   border: 1px solid var(--line);
   background: var(--surface);
-  box-shadow: 0 10px 30px rgb(20 20 20 / 4%);
+  box-shadow: var(--card-shadow);
+}
+
+.pill-float {
+  border-radius: 9999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--card-shadow);
+  padding: 0.4rem 0.9rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 @keyframes rise-in {

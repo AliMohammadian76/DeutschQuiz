@@ -1,5 +1,6 @@
 import ReactECharts from "echarts-for-react";
 import type { EChartsOption } from "echarts";
+import type { Theme } from "./theme";
 
 export type ProgressChartAttempt = {
   attemptId: string;
@@ -27,7 +28,16 @@ type UserProgressChartProps = {
   emptyLabel: string;
   locale: string;
   rtl: boolean;
+  theme: Theme;
 };
+
+function readCssVar(name: string, fallback: string) {
+  if (typeof window === "undefined") return fallback;
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue(name)
+    .trim();
+  return value || fallback;
+}
 
 function formatAxisDate(value: string | null, locale: string) {
   if (!value) return "—";
@@ -46,6 +56,7 @@ export function UserProgressChart({
   emptyLabel,
   locale,
   rtl,
+  theme,
 }: UserProgressChartProps) {
   const chronological = [...attempts]
     .filter((attempt) => attempt.completedAtUtc)
@@ -66,6 +77,19 @@ export function UserProgressChart({
     );
   }
 
+  const muted = readCssVar("--muted", theme === "dark" ? "#9b9590" : "#6b6458");
+  const line = readCssVar("--line", theme === "dark" ? "#2a2a2a" : "#e4ddd0");
+  const foreground = readCssVar(
+    "--foreground",
+    theme === "dark" ? "#f4f4f5" : "#141414",
+  );
+  const surface = readCssVar(
+    "--surface",
+    theme === "dark" ? "#121212" : "#fffcf8",
+  );
+  const split =
+    theme === "dark" ? "rgba(255,255,255,0.06)" : "rgba(20,20,20,0.06)";
+
   const scores = chronological.map((attempt) => Math.round(attempt.score));
   const averageScore =
     scores.length > 0
@@ -76,21 +100,21 @@ export function UserProgressChart({
     color: ["#e11d2e", "#f5c518"],
     textStyle: {
       fontFamily: "inherit",
-      color: "#5c564c",
+      color: muted,
     },
     tooltip: {
       trigger: "axis",
       axisPointer: { type: "cross" },
-      backgroundColor: "rgba(255,248,232,0.96)",
-      borderColor: "#e8e0d0",
-      textStyle: { color: "#141414" },
+      backgroundColor: surface,
+      borderColor: line,
+      textStyle: { color: foreground },
     },
     legend: {
       data: chronological.length
         ? [scoreLabel, ...(lessonBars.length ? [averageLabel, bestLabel] : [])]
         : [averageLabel, bestLabel],
       top: 0,
-      textStyle: { color: "#5c564c" },
+      textStyle: { color: muted },
     },
     grid: [
       {
@@ -121,8 +145,8 @@ export function UserProgressChart({
                 formatAxisDate(attempt.completedAtUtc, locale),
               ),
               boundaryGap: false,
-              axisLine: { lineStyle: { color: "#e8e0d0" } },
-              axisLabel: { color: "#5c564c", hideOverlap: true },
+              axisLine: { lineStyle: { color: line } },
+              axisLabel: { color: muted, hideOverlap: true },
               axisTick: { show: false },
             },
           ]
@@ -133,8 +157,8 @@ export function UserProgressChart({
               type: "category" as const,
               gridIndex: chronological.length ? 1 : 0,
               data: lessonBars.map((lesson) => `L${lesson.lessonNumber}`),
-              axisLine: { lineStyle: { color: "#e8e0d0" } },
-              axisLabel: { color: "#5c564c" },
+              axisLine: { lineStyle: { color: line } },
+              axisLabel: { color: muted },
               axisTick: { show: false },
             },
           ]
@@ -147,8 +171,8 @@ export function UserProgressChart({
               type: "value" as const,
               min: 0,
               max: 100,
-              axisLabel: { formatter: "{value}%", color: "#5c564c" },
-              splitLine: { lineStyle: { color: "#efe8da", type: "dashed" as const } },
+              axisLabel: { formatter: "{value}%", color: muted },
+              splitLine: { lineStyle: { color: split, type: "dashed" as const } },
             },
           ]
         : []),
@@ -159,8 +183,8 @@ export function UserProgressChart({
               gridIndex: chronological.length ? 1 : 0,
               min: 0,
               max: 100,
-              axisLabel: { formatter: "{value}%", color: "#5c564c" },
-              splitLine: { lineStyle: { color: "#efe8da", type: "dashed" as const } },
+              axisLabel: { formatter: "{value}%", color: muted },
+              splitLine: { lineStyle: { color: split, type: "dashed" as const } },
             },
           ]
         : []),
@@ -189,7 +213,11 @@ export function UserProgressChart({
                 },
               },
               lineStyle: { width: 3, color: "#e11d2e" },
-              itemStyle: { color: "#e11d2e", borderColor: "#fff", borderWidth: 2 },
+              itemStyle: {
+                color: "#e11d2e",
+                borderColor: surface,
+                borderWidth: 2,
+              },
               markLine: {
                 silent: true,
                 symbol: "none",
@@ -198,10 +226,14 @@ export function UserProgressChart({
                     yAxis: averageScore,
                     label: {
                       formatter: `${averageLabel} ${averageScore}%`,
-                      color: "#141414",
+                      color: foreground,
                       fontSize: 11,
                     },
-                    lineStyle: { color: "#141414", type: "dashed" as const, width: 1.5 },
+                    lineStyle: {
+                      color: foreground,
+                      type: "dashed" as const,
+                      width: 1.5,
+                    },
                   },
                 ],
               },
@@ -250,6 +282,7 @@ export function UserProgressChart({
 
   return (
     <ReactECharts
+      key={theme}
       option={option}
       style={{ height: chronological.length && lessonBars.length ? 420 : 300, width: "100%" }}
       opts={{ renderer: "canvas" }}

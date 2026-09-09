@@ -12,6 +12,9 @@ type Messages = {
   login: string;
   register: string;
   heroHeadline: string;
+  heroSubcopy: string;
+  themeToLight: string;
+  themeToDark: string;
   startQuiz: string;
   preparing: string;
   progress: string;
@@ -92,6 +95,9 @@ const fa: Messages = {
   login: "ورود",
   register: "ثبت‌نام",
   heroHeadline: "آلمانی را با آزمون‌های کوتاه و دقیق تمرین کن.",
+  heroSubcopy: "کتاب را انتخاب کن، درس را بزن، و در چند دقیقه پیشرفت کن.",
+  themeToLight: "حالت روشن",
+  themeToDark: "حالت تاریک",
   startQuiz: "شروع آزمون",
   preparing: "آماده‌سازی...",
   progress: "پیشرفت",
@@ -182,6 +188,9 @@ const en: Messages = {
   login: "Log in",
   register: "Sign up",
   heroHeadline: "Practice German with short, focused quizzes.",
+  heroSubcopy: "Pick a book, choose a lesson, and make progress in minutes.",
+  themeToLight: "Light mode",
+  themeToDark: "Dark mode",
   startQuiz: "Start quiz",
   preparing: "Preparing...",
   progress: "Progress",

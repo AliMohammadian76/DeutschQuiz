@@ -17,6 +17,12 @@ import {
   type QuizQuestion,
 } from "./quizDraft";
 import { UserProgressChart } from "./UserProgressChart";
+import {
+  applyTheme,
+  getStoredTheme,
+  toggleTheme,
+  type Theme,
+} from "./theme";
 
 const apiBaseUrl =
   import.meta.env.VITE_API_BASE_URL ?? "http://localhost:5083/api";
@@ -25,20 +31,20 @@ const quizModeMeta = [
   {
     category: "Vocabulary",
     subtitle: "Wortschatz",
-    accent: "bg-de-black text-white",
-    card: "border-de-black/10 bg-gradient-to-br from-surface to-de-mist",
+    accent: "bg-surface-ink text-white",
+    card: "border-line bg-surface",
   },
   {
     category: "Grammar",
     subtitle: "Grammatik",
     accent: "bg-de-red text-white",
-    card: "border-de-red/15 bg-gradient-to-br from-surface to-surface-rose",
+    card: "border-de-red/25 bg-surface",
   },
   {
     category: "Mixed",
     subtitle: "Komplett",
     accent: "bg-de-gold text-de-black",
-    card: "border-de-gold/40 bg-gradient-to-br from-surface to-surface-warm",
+    card: "border-de-gold/35 bg-surface",
   },
 ] as const;
 
@@ -169,11 +175,16 @@ export default function App() {
   const [quizResult, setQuizResult] = useState<AttemptResult | null>(null);
   const [activePage, setActivePage] = useState<AppPage>("quizzes");
   const [pickerStep, setPickerStep] = useState<QuizPickerStep>("book");
+  const [theme, setTheme] = useState<Theme>(() => getStoredTheme());
 
   useEffect(() => {
     document.documentElement.lang = uiLanguage;
     document.documentElement.dir = dirFor(uiLanguage);
   }, [uiLanguage]);
+
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
 
   useEffect(() => {
     if (activePage !== "quiz" || quizResult || !quizQuestions.length || !quizStartedAt) {
@@ -639,45 +650,61 @@ export default function App() {
     return { current, longest, activeDays, week };
   }, [history, uiLanguage]);
 
+  function scrollToBooks() {
+    document.getElementById("book-picker")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }
+
   return (
-    <main className="min-h-screen">
-      <div className="de-flag h-2 w-full animate-flag rounded-b-2xl" aria-hidden>
+    <main className="min-h-screen bg-background text-foreground">
+      <div className="de-flag h-1.5 w-full animate-flag" aria-hidden>
         <span /><span /><span />
       </div>
 
       <div className="mx-auto max-w-6xl px-5 py-6 sm:px-8">
-        <header className="animate-rise flex items-center justify-between rounded-3xl border border-line bg-surface/90 px-4 py-3 shadow-sm backdrop-blur sm:px-5">
+        <header className="animate-rise flex flex-wrap items-center justify-between gap-3 border-b border-line pb-5">
           <div className="flex items-center gap-3">
-            <div className="de-flag h-11 w-8 shrink-0 rounded-xl shadow-md" aria-hidden>
+            <div className="de-flag h-10 w-8 shrink-0 rounded-xl shadow-md" aria-hidden>
               <span /><span /><span />
             </div>
             <div>
-              <p className="font-display text-xl font-extrabold tracking-tight text-de-black">
+              <p className="font-display text-xl font-extrabold tracking-tight text-foreground">
                 DeutschQuiz
               </p>
               <p className="text-xs text-muted">Deutsch lernen · Schritt für Schritt</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <nav className="flex items-center gap-1 rounded-full border border-line bg-de-cream p-1" aria-label="Main navigation">
+          <div className="flex flex-wrap items-center gap-2">
+            <nav className="flex items-center gap-1 rounded-full border border-line bg-surface p-1" aria-label="Main navigation">
               {(["quizzes", "progress", "history"] as const).map((page) => (
                 <button
                   key={page}
                   onClick={() => setActivePage(page)}
                   className={`rounded-full px-3 py-2 text-xs font-bold transition ${
                     activePage === page || (page === "quizzes" && activePage === "quiz")
-                      ? "bg-de-black text-white"
-                      : "text-muted hover:bg-white"
+                      ? "bg-de-red text-white"
+                      : "text-muted hover:bg-de-mist hover:text-foreground"
                   }`}
                 >
                   {pageLabels[page]}
                 </button>
               ))}
             </nav>
+            <button
+              type="button"
+              onClick={() => setTheme((current) => toggleTheme(current))}
+              className="grid h-10 w-10 place-items-center rounded-full border border-line bg-surface text-sm text-foreground transition hover:border-de-gold"
+              aria-label={theme === "dark" ? t.themeToLight : t.themeToDark}
+              title={theme === "dark" ? t.themeToLight : t.themeToDark}
+            >
+              {theme === "dark" ? "☀" : "☾"}
+            </button>
             {SHOW_LANGUAGE_SWITCHER && (
               <button
                 onClick={() => setLanguage(language === "fa" ? "en" : "fa")}
-                className="rounded-full border border-line bg-de-cream px-3 py-2 text-xs font-semibold text-muted transition hover:border-de-gold hover:bg-de-gold/30"
+                className="rounded-full border border-line bg-surface px-3 py-2 text-xs font-semibold text-muted transition hover:border-de-gold"
               >
                 {language === "fa" ? "EN" : "FA"}
               </button>
@@ -689,7 +716,7 @@ export default function App() {
                 </span>
                 <button
                   onClick={logout}
-                  className="rounded-full border border-line bg-surface px-4 py-2 text-sm font-semibold text-de-black hover:bg-de-mist"
+                  className="rounded-full border border-line bg-surface px-4 py-2 text-sm font-semibold text-foreground hover:bg-de-mist"
                 >
                   {t.logout}
                 </button>
@@ -697,7 +724,7 @@ export default function App() {
             ) : (
               <button
                 onClick={() => openAuth("login")}
-                className="rounded-full bg-de-black px-5 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-de-red"
+                className="rounded-full bg-de-red px-5 py-2.5 text-sm font-semibold text-white shadow-md shadow-de-red/20 transition hover:brightness-110"
               >
                 {t.login}
               </button>
@@ -707,27 +734,52 @@ export default function App() {
 
         {((activePage === "quizzes" && pickerStep === "book") ||
           (activePage !== "quizzes" && activePage !== "quiz")) && (
-        <section className="mt-10 grid items-stretch gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+        <section className="mt-10 grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div
-            className="animate-rise relative z-10 self-center rounded-[2rem] border border-line bg-gradient-to-br from-surface via-de-cream to-surface-warm p-6 shadow-sm sm:p-8"
+            className="animate-rise relative z-10 self-center"
             style={{ animationDelay: "80ms" }}
           >
-            <p className="font-display text-5xl font-extrabold leading-none tracking-tight text-de-black sm:text-7xl">
+            <p className="font-display text-5xl font-extrabold leading-none tracking-tight text-foreground sm:text-7xl">
               Deutsch<span className="text-de-red">Quiz</span>
             </p>
-            <h1 className="mt-5 max-w-xl text-2xl font-bold leading-10 text-de-black sm:text-3xl">
+            <h1 className="mt-6 max-w-xl text-2xl font-bold leading-10 text-foreground sm:text-3xl">
               {t.heroHeadline}
             </h1>
+            <p className="mt-4 max-w-md text-sm leading-7 text-muted">
+              {t.heroSubcopy}
+            </p>
+            {activePage === "quizzes" && pickerStep === "book" && (
+              <button
+                type="button"
+                onClick={scrollToBooks}
+                className="mt-8 inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-sm font-bold text-background shadow-lg transition hover:bg-de-gold hover:text-de-black"
+              >
+                {t.startQuiz}
+                <span aria-hidden>←</span>
+              </button>
+            )}
           </div>
 
           <div
-            className="animate-flag relative flex min-h-[280px] items-center justify-center overflow-hidden rounded-[2rem] border border-line bg-gradient-to-br from-de-mist via-surface to-de-cream p-6 shadow-xl shadow-de-black/10 lg:min-h-[360px]"
+            className="animate-flag relative flex min-h-[280px] items-center justify-center overflow-visible rounded-[2rem] border border-line bg-surface p-6 lg:min-h-[360px]"
             style={{ animationDelay: "200ms" }}
           >
+            <span className="pill-float absolute start-2 top-8 text-foreground sm:start-6">
+              {t.categoryVocabulary}
+            </span>
+            <span className="pill-float absolute end-3 top-16 bg-surface-warm text-foreground sm:end-8">
+              {t.categoryGrammar}
+            </span>
+            <span className="pill-float absolute bottom-10 start-6 bg-surface-rose text-foreground sm:start-10">
+              {t.categoryMixed}
+            </span>
+            <span className="pill-float absolute bottom-16 end-4 text-foreground sm:end-10">
+              A1–B1
+            </span>
             <img
               src="/germany-flag-map.png"
               alt="Deutschland"
-              className="max-h-[300px] w-auto max-w-full object-contain drop-shadow-lg lg:max-h-[340px]"
+              className="relative z-10 max-h-[260px] w-auto max-w-full object-contain drop-shadow-lg lg:max-h-[300px]"
             />
           </div>
         </section>
@@ -737,13 +789,13 @@ export default function App() {
           <section className="mt-12 grid gap-3 sm:grid-cols-4">
             {(
               [
-                [t.statAverage, `${Math.round(progress.averageScore)}٪`, "bg-surface-warm border-de-gold/40 text-de-black"],
+                [t.statAverage, `${Math.round(progress.averageScore)}٪`, "bg-surface-warm border-de-gold/40 text-foreground"],
                 [t.statBest, `${progress.bestScore}٪`, "bg-surface-rose border-de-rose/30 text-de-red"],
-                [t.statCorrect, `${progress.totalCorrectAnswers}/${progress.totalQuestionsAnswered}`, "bg-de-mist border-line text-de-black"],
-                [t.statTime, t.secondsShort(Math.round(progress.totalTimeMs / 1000)), "bg-surface border-line text-de-black"],
+                [t.statCorrect, `${progress.totalCorrectAnswers}/${progress.totalQuestionsAnswered}`, "bg-de-mist border-line text-foreground"],
+                [t.statTime, t.secondsShort(Math.round(progress.totalTimeMs / 1000)), "bg-surface border-line text-foreground"],
               ] as const
             ).map(([label, value, tone]) => (
-              <div key={label} className={`rounded-3xl border px-4 py-5 shadow-sm ${tone}`}>
+              <div key={label} className={`rounded-3xl border px-4 py-5 ${tone}`}>
                 <p className="text-xs text-muted">{label}</p>
                 <p className="font-display mt-2 text-2xl font-bold">{value}</p>
               </div>
@@ -752,39 +804,50 @@ export default function App() {
         )}
 
         {token && activePage !== "quiz" && (
-          <section className="mt-8 overflow-hidden rounded-[2rem] border border-orange-200 bg-gradient-to-l from-orange-50 via-amber-50 to-white p-5 shadow-sm sm:p-6">
+          <section className="mt-8 overflow-hidden rounded-[2rem] border border-de-gold/25 bg-surface-warm p-5 sm:p-6">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
-                <div className="grid h-16 w-16 place-items-center rounded-3xl bg-orange-500 text-3xl shadow-lg shadow-orange-500/25" aria-hidden>🔥</div>
+                <div className="grid h-16 w-16 place-items-center rounded-3xl bg-de-red text-3xl text-white shadow-lg shadow-de-red/25" aria-hidden>🔥</div>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wider text-orange-700">{uiLanguage === "fa" ? "استریک یادگیری" : "Learning streak"}</p>
-                  <p className="font-display mt-1 text-3xl font-extrabold text-de-black">{streak.current} {uiLanguage === "fa" ? "روز" : streak.current === 1 ? "day" : "days"}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-de-red">{uiLanguage === "fa" ? "استریک یادگیری" : "Learning streak"}</p>
+                  <p className="font-display mt-1 text-3xl font-extrabold text-foreground">{streak.current} {uiLanguage === "fa" ? "روز" : streak.current === 1 ? "day" : "days"}</p>
                   <p className="mt-1 text-xs text-muted">{uiLanguage === "fa" ? `بهترین رکورد: ${streak.longest} روز` : `Best streak: ${streak.longest} days`}</p>
                 </div>
               </div>
               <div className="grid grid-cols-7 gap-2" dir="ltr">
                 {streak.week.map((day) => {
                   const active = streak.activeDays.has(day.key);
-                  return <div key={day.key} className="flex flex-col items-center gap-1"><span className="text-[10px] font-bold text-muted">{day.label}</span><span className={`grid h-9 w-9 place-items-center rounded-full text-xs font-bold ${active ? "bg-orange-500 text-white shadow-md shadow-orange-500/25" : "border border-orange-100 bg-white text-muted"}`}>{active ? "✓" : day.day}</span></div>;
+                  return (
+                    <div key={day.key} className="flex flex-col items-center gap-1">
+                      <span className="text-[10px] font-bold text-muted">{day.label}</span>
+                      <span className={`grid h-9 w-9 place-items-center rounded-full text-xs font-bold ${active ? "bg-de-gold text-de-black shadow-md" : "border border-line bg-surface text-muted"}`}>
+                        {active ? "✓" : day.day}
+                      </span>
+                    </div>
+                  );
                 })}
               </div>
             </div>
-            {streak.current === 0 && <p className="mt-4 rounded-2xl bg-white/70 px-3 py-2 text-xs text-muted">{uiLanguage === "fa" ? "امروز یک آزمون را ثبت کن تا استریکت شروع شود." : "Finish a quiz today to start your streak."}</p>}
+            {streak.current === 0 && (
+              <p className="mt-4 rounded-2xl border border-line bg-surface/70 px-3 py-2 text-xs text-muted">
+                {uiLanguage === "fa" ? "امروز یک آزمون را ثبت کن تا استریکت شروع شود." : "Finish a quiz today to start your streak."}
+              </p>
+            )}
           </section>
         )}
 
         {activePage === "progress" && token && progress && (
-          <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
+          <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 sm:p-7">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-de-red">
                   {t.progressChartEyebrow}
                 </p>
-                <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                <h2 className="mt-2 font-display text-2xl font-bold text-foreground">
                   {t.progressChartHeading}
                 </h2>
               </div>
-              <span className="rounded-full bg-de-gold/40 px-3 py-1 text-xs font-bold text-de-black">
+              <span className="rounded-full bg-de-gold/30 px-3 py-1 text-xs font-bold text-foreground">
                 {selectedBook} {selectedLevel}
               </span>
             </div>
@@ -798,9 +861,9 @@ export default function App() {
                       attempt.category === mode.category,
                   );
                   return (
-                    <article key={mode.category} className="rounded-3xl border border-line bg-gradient-to-br from-white to-de-mist p-3">
+                    <article key={mode.category} className="rounded-3xl border border-line bg-de-mist/60 p-3">
                       <div className="flex items-center justify-between px-2 pt-1">
-                        <h3 className="font-display text-lg font-bold text-de-black">{categoryLabel(mode.category)}</h3>
+                        <h3 className="font-display text-lg font-bold text-foreground">{categoryLabel(mode.category)}</h3>
                         <span className="text-xs text-muted">{categoryAttempts.length}</span>
                       </div>
                       <UserProgressChart
@@ -812,6 +875,7 @@ export default function App() {
                         emptyLabel={t.chartEmpty}
                         locale={localeFor(uiLanguage)}
                         rtl={uiLanguage === "fa"}
+                        theme={theme}
                       />
                     </article>
                   );
@@ -822,20 +886,20 @@ export default function App() {
         )}
 
         {activePage === "progress" && token && progress && (
-          <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
+          <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 sm:p-7">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-de-red">Fortschritt</p>
-                <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                <h2 className="mt-2 font-display text-2xl font-bold text-foreground">
                   {t.progressHeading(selectedBook, selectedLevel)}
                 </h2>
               </div>
-              <span className="rounded-full bg-de-gold/40 px-3 py-1 text-xs font-bold text-de-black">
+              <span className="rounded-full bg-de-gold/30 px-3 py-1 text-xs font-bold text-foreground">
                 {t.lessonCount(selectedBookProgress.length)}
               </span>
             </div>
             {selectedBookProgress.length === 0 ? (
-              <p className="mt-6 rounded-3xl border border-dashed border-de-amber/50 bg-surface-warm px-4 py-6 text-center text-sm text-muted">
+              <p className="mt-6 rounded-3xl border border-dashed border-de-amber/40 bg-surface-warm px-4 py-6 text-center text-sm text-muted">
                 {t.noProgressInLevel}
               </p>
             ) : (
@@ -843,14 +907,14 @@ export default function App() {
                 {selectedBookProgress.map((lesson) => (
                   <div
                     key={lesson.lessonId}
-                    className="rounded-3xl border border-line bg-gradient-to-br from-white to-de-mist p-4 shadow-sm"
+                    className="rounded-3xl border border-line bg-de-mist/50 p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <span className="text-xs font-bold text-de-red">
                           Lektion {lesson.lessonNumber}
                         </span>
-                        <p className="mt-1 text-sm font-bold text-de-black" dir="ltr">
+                        <p className="mt-1 text-sm font-bold text-foreground" dir="ltr">
                           {lesson.title}
                         </p>
                       </div>
@@ -860,7 +924,7 @@ export default function App() {
                     </div>
                     <div className="mt-4 h-2 overflow-hidden rounded-full bg-line">
                       <div
-                        className="h-full rounded-full bg-gradient-to-l from-de-red to-de-rose"
+                        className="h-full rounded-full bg-gradient-to-l from-de-red to-de-gold"
                         style={{ width: `${lesson.averageScore}%` }}
                       />
                     </div>
@@ -877,18 +941,18 @@ export default function App() {
         )}
 
         {activePage === "history" && token && (
-          <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
+          <section className="mt-12 rounded-[2rem] border border-line bg-surface p-5 sm:p-7">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-de-red">Verlauf</p>
-                <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                <h2 className="mt-2 font-display text-2xl font-bold text-foreground">
                   {t.historyHeading}
                 </h2>
               </div>
               <button
                 onClick={() => void loadHistory(token)}
                 disabled={historyLoading}
-                className="rounded-full border border-line bg-de-cream px-4 py-2 text-xs font-semibold text-muted disabled:opacity-50"
+                className="rounded-full border border-line bg-de-mist px-4 py-2 text-xs font-semibold text-muted disabled:opacity-50"
               >
                 {historyLoading ? t.loading : t.refresh}
               </button>
@@ -902,11 +966,11 @@ export default function App() {
                 {history.map((attempt) => (
                   <div
                     key={attempt.attemptId}
-                    className="flex flex-col gap-3 rounded-3xl border border-line bg-gradient-to-l from-surface-warm/40 to-white px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 rounded-3xl border border-line bg-de-mist/40 px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-de-red/10 px-2.5 py-1 text-sm font-bold text-de-red">
+                        <span className="rounded-full bg-de-red/15 px-2.5 py-1 text-sm font-bold text-de-red">
                           {categoryLabel(attempt.category)}
                         </span>
                         <span className="text-xs text-muted">
@@ -935,7 +999,7 @@ export default function App() {
                         </span>
                       </div>
                       <div>
-                        <span className="block text-sm font-bold text-de-black">
+                        <span className="block text-sm font-bold text-foreground">
                           {t.secondsShort(Math.round(attempt.totalTimeMs / 1000))}
                         </span>
                         <span className="text-[11px] text-muted">{t.timeLabel}</span>
@@ -964,7 +1028,7 @@ export default function App() {
                 >
                   <button
                     onClick={() => goToPickerStep("book")}
-                    className="rounded-full px-2 py-1 hover:bg-de-mist hover:text-de-black"
+                    className="rounded-full px-2 py-1 hover:bg-de-mist hover:text-foreground"
                     dir="ltr"
                   >
                     {selectedBook}
@@ -977,7 +1041,7 @@ export default function App() {
                         <span aria-hidden>›</span>
                         <button
                           onClick={() => goToPickerStep("level")}
-                          className="rounded-full px-2 py-1 hover:bg-de-mist hover:text-de-black"
+                          className="rounded-full px-2 py-1 hover:bg-de-mist hover:text-foreground"
                           dir="ltr"
                         >
                           {selectedLevel}
@@ -999,13 +1063,13 @@ export default function App() {
                       {pickerStep === "mode" ? (
                         <button
                           onClick={() => goToPickerStep("lesson")}
-                          className="rounded-full px-2 py-1 hover:bg-de-mist hover:text-de-black"
+                          className="rounded-full px-2 py-1 hover:bg-de-mist hover:text-foreground"
                           dir="ltr"
                         >
                           Lektion {selectedLesson?.number ?? 1}
                         </button>
                       ) : (
-                        <span className="rounded-full px-2 py-1 text-de-black">
+                        <span className="rounded-full px-2 py-1 text-foreground">
                           {t.pickLessonHeading}
                         </span>
                       )}
@@ -1014,7 +1078,7 @@ export default function App() {
                   {pickerStep === "mode" && (
                     <>
                       <span aria-hidden>›</span>
-                      <span className="rounded-full px-2 py-1 text-de-black">
+                      <span className="rounded-full px-2 py-1 text-foreground">
                         {t.quizTypeHeading}
                       </span>
                     </>
@@ -1024,9 +1088,9 @@ export default function App() {
             )}
 
             {pickerStep === "book" && (
-              <div className="rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
+              <div id="book-picker" className="scroll-mt-8 rounded-[2rem] border border-line bg-surface p-5 sm:p-7">
                 <p className="text-xs font-bold uppercase tracking-wider text-de-red">Lehrwerk</p>
-                <h2 className="mt-2 font-display text-2xl font-bold text-de-black">{t.pickBook}</h2>
+                <h2 className="mt-2 font-display text-2xl font-bold text-foreground">{t.pickBook}</h2>
                 {lessonsError && (
                   <p className="mt-4 rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-sm font-semibold text-de-red">
                     {lessonsError}
@@ -1037,10 +1101,10 @@ export default function App() {
                     <button
                       key={book.name}
                       onClick={() => selectBook(book.name)}
-                      className={`rounded-3xl border p-5 shadow-sm transition ${textAlign} ${
+                      className={`rounded-[1.75rem] border p-5 transition ${textAlign} ${
                         completedBookNames.has(book.name)
-                          ? "border-emerald-300 bg-gradient-to-br from-emerald-50 to-white text-de-black hover:border-emerald-500"
-                          : "border-line bg-gradient-to-br from-white to-de-cream text-de-black hover:border-de-red"
+                          ? "border-success/40 bg-success-bg text-foreground hover:border-success"
+                          : "border-line bg-de-mist/40 text-foreground hover:border-de-red"
                       }`}
                     >
                       <p className="font-display text-xl font-bold" dir="ltr">
@@ -1060,9 +1124,9 @@ export default function App() {
             )}
 
             {pickerStep === "level" && (
-              <div className="rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
+              <div className="rounded-[2rem] border border-line bg-surface p-5 sm:p-7">
                 <p className="text-xs font-bold uppercase tracking-wider text-de-red">Niveau</p>
-                <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                <h2 className="mt-2 font-display text-2xl font-bold text-foreground">
                   {t.pickLevelHeading}
                 </h2>
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -1070,7 +1134,7 @@ export default function App() {
                     <button
                       key={level}
                       onClick={() => selectLevel(level)}
-                      className="rounded-3xl border border-line bg-gradient-to-br from-white to-de-cream p-5 text-de-black shadow-sm transition hover:border-de-gold hover:bg-surface-warm"
+                      className="rounded-[1.75rem] border border-line bg-de-mist/40 p-5 text-foreground transition hover:border-de-gold hover:bg-surface-warm"
                     >
                       <p className="font-display text-2xl font-bold" dir="ltr">
                         {level}
@@ -1083,11 +1147,11 @@ export default function App() {
             )}
 
             {pickerStep === "lesson" && (
-              <div className="rounded-[2rem] border border-line bg-surface p-5 shadow-sm sm:p-7">
+              <div className="rounded-[2rem] border border-line bg-surface p-5 sm:p-7">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wider text-de-red">Lektion</p>
-                    <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                    <h2 className="mt-2 font-display text-2xl font-bold text-foreground">
                       {t.pickLessonHeading}
                     </h2>
                   </div>
@@ -1102,23 +1166,23 @@ export default function App() {
                     <button
                       key={lesson.id}
                       onClick={() => selectLesson(lesson.id)}
-                      className={`rounded-3xl border p-4 shadow-sm transition ${textAlign} ${
+                      className={`rounded-[1.5rem] border p-4 transition ${textAlign} ${
                         completedLessonIds.has(lesson.id)
-                          ? "border-emerald-300 bg-gradient-to-br from-emerald-50 to-white hover:border-emerald-500"
-                          : "border-line bg-white hover:border-de-gold hover:bg-surface-warm"
+                          ? "border-success/40 bg-success-bg hover:border-success"
+                          : "border-line bg-de-mist/40 hover:border-de-gold hover:bg-surface-warm"
                       }`}
                     >
                       <span
                         className={`text-xs font-bold ${
                           completedLessonIds.has(lesson.id)
-                            ? "text-emerald-700"
+                            ? "text-success"
                             : "text-de-red"
                         }`}
                       >
                         {completedLessonIds.has(lesson.id) ? "✓ " : ""}
                         Lektion {lesson.number}
                       </span>
-                      <p className="mt-2 text-sm font-bold text-de-black" dir="ltr">
+                      <p className="mt-2 text-sm font-bold text-foreground" dir="ltr">
                         {lesson.title}
                       </p>
                     </button>
@@ -1132,11 +1196,11 @@ export default function App() {
                 <div className="mb-6 flex items-end justify-between gap-4">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wider text-de-red">Quiz</p>
-                    <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                    <h2 className="mt-2 font-display text-2xl font-bold text-foreground">
                       {t.quizTypeHeading}
                     </h2>
                   </div>
-                  <span className="rounded-full bg-de-gold/50 px-3 py-1 text-xs font-bold text-de-black">
+                  <span className="rounded-full bg-de-gold/30 px-3 py-1 text-xs font-bold text-foreground">
                     Lektion {selectedLesson?.number ?? 1}
                   </span>
                 </div>
@@ -1155,11 +1219,11 @@ export default function App() {
                         key={mode.category}
                         onClick={() => openOrResumeQuiz(mode.category)}
                         disabled={quizLoading}
-                        className={`group rounded-[1.75rem] border p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait ${textAlign} ${
+                        className={`group rounded-[1.75rem] border p-5 transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait ${textAlign} ${
                           sectionInProgress
-                            ? "border-de-amber bg-gradient-to-br from-surface-warm to-white"
+                            ? "border-de-amber bg-surface-warm"
                             : sectionCompleted
-                              ? "border-emerald-400 bg-gradient-to-br from-emerald-50 to-white"
+                              ? "border-success/40 bg-success-bg"
                               : mode.card
                         }`}
                       >
@@ -1168,7 +1232,7 @@ export default function App() {
                             sectionInProgress
                               ? "bg-de-amber text-de-black"
                               : sectionCompleted
-                                ? "bg-emerald-600 text-white"
+                                ? "bg-success text-white"
                                 : mode.accent
                           }`}
                         >
@@ -1178,7 +1242,7 @@ export default function App() {
                               ? `✓ ${mode.subtitle}`
                               : mode.subtitle}
                         </span>
-                        <h3 className="mt-4 text-lg font-bold text-de-black">{copy.title}</h3>
+                        <h3 className="mt-4 text-lg font-bold text-foreground">{copy.title}</h3>
                         <p className="mt-2 text-sm leading-7 text-muted">{copy.description}</p>
                         <div className="mt-5 text-sm font-bold text-de-red group-hover:underline">
                           {sectionInProgress ? t.continueQuiz : t.start}
@@ -1199,7 +1263,7 @@ export default function App() {
 
         {activePage === "quiz" && (
           <section className="mt-10 pb-16">
-            <div className="mx-auto max-w-2xl rounded-[2rem] border border-line bg-surface p-6 shadow-sm sm:p-8">
+            <div className="mx-auto max-w-2xl rounded-[2rem] border border-line bg-surface p-6 sm:p-8">
               {quizResult ? (
                 <div className="text-center">
                   <div className="de-flag mx-auto h-16 w-12 rounded-2xl shadow-md" aria-hidden>
@@ -1208,7 +1272,7 @@ export default function App() {
                   <p className="mt-5 text-xs font-bold uppercase tracking-wider text-de-red">
                     Ergebnis
                   </p>
-                  <h2 className="font-display mt-2 text-4xl font-extrabold text-de-black">
+                  <h2 className="font-display mt-2 text-4xl font-extrabold text-foreground">
                     {Math.round(quizResult.score)}٪
                   </h2>
                   <p className="mt-3 text-sm text-muted">
@@ -1224,11 +1288,11 @@ export default function App() {
                         key={answer.questionId}
                         className={`rounded-3xl border p-4 ${
                           answer.isCorrect
-                            ? "border-de-gold/60 bg-surface-warm"
+                            ? "border-de-gold/50 bg-surface-warm"
                             : "border-de-rose/40 bg-surface-rose"
                         }`}
                       >
-                        <p className="text-sm font-bold text-de-black" dir="ltr">
+                        <p className="text-sm font-bold text-foreground" dir="ltr">
                           {index + 1}. {answer.prompt}
                         </p>
                         <p className="mt-2 text-xs text-muted" dir="ltr">
@@ -1238,7 +1302,7 @@ export default function App() {
                             <>
                               {" "}
                               · {t.correctLabel}{" "}
-                              <span className="font-bold text-de-black">{answer.correctAnswer}</span>
+                              <span className="font-bold text-foreground">{answer.correctAnswer}</span>
                             </>
                           )}
                         </p>
@@ -1250,7 +1314,7 @@ export default function App() {
                   </div>
                   <button
                     onClick={finishQuizSession}
-                    className="mt-7 rounded-2xl bg-de-black px-6 py-3 text-sm font-bold text-white"
+                    className="mt-7 rounded-2xl bg-de-red px-6 py-3 text-sm font-bold text-white"
                   >
                     {t.back}
                   </button>
@@ -1266,7 +1330,7 @@ export default function App() {
                             ? "Grammatik"
                             : "Komplett"}
                       </p>
-                      <h2 className="mt-2 font-display text-2xl font-bold text-de-black">
+                      <h2 className="mt-2 font-display text-2xl font-bold text-foreground">
                         {t.questionOf(quizIndex + 1, quizQuestions.length)}
                       </h2>
                       <p className="mt-1 text-xs text-muted">{t.resumeHint}</p>
@@ -1287,9 +1351,9 @@ export default function App() {
                       }}
                     />
                   </div>
-                  <div className="mt-8 rounded-[1.75rem] border border-line bg-gradient-to-b from-de-cream to-background p-5 sm:p-7">
+                  <div className="mt-8 rounded-[1.75rem] border border-line bg-de-mist/50 p-5 sm:p-7">
                     <p
-                      className="text-center text-xl font-bold leading-9 text-de-black"
+                      className="text-center text-xl font-bold leading-9 text-foreground"
                       dir="ltr"
                     >
                       {activeQuestion.prompt}
@@ -1303,8 +1367,8 @@ export default function App() {
                             onClick={() => selectAnswer(option)}
                             className={`rounded-2xl border px-4 py-3.5 text-center text-base font-semibold transition ${
                               selected
-                                ? "border-de-black bg-de-black text-white shadow-md"
-                                : "border-line bg-white text-de-black hover:border-de-red hover:bg-surface-rose"
+                                ? "border-de-red bg-de-red text-white shadow-md"
+                                : "border-line bg-surface text-foreground hover:border-de-red hover:bg-surface-rose"
                             }`}
                             dir="ltr"
                           >
@@ -1339,7 +1403,7 @@ export default function App() {
                       <button
                         onClick={() => void submitQuiz()}
                         disabled={!quizAnswers[activeQuestion.id] || quizSubmitting}
-                        className="rounded-2xl bg-de-black px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
+                        className="rounded-2xl bg-surface-ink px-5 py-3 text-sm font-bold text-white disabled:opacity-40"
                       >
                         {quizSubmitting ? t.submitting : t.submitQuiz}
                       </button>
@@ -1364,7 +1428,7 @@ export default function App() {
 
       {authOpen && (
         <div
-          className="fixed inset-0 z-50 grid place-items-center bg-de-black/45 px-5 backdrop-blur-sm"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/60 px-5 backdrop-blur-sm"
           onMouseDown={() => setAuthOpen(false)}
         >
           <div
@@ -1376,8 +1440,8 @@ export default function App() {
             </div>
             <div className="flex items-start justify-between">
               <div>
-                <p className="font-display text-sm font-bold text-de-black">DeutschQuiz</p>
-                <h2 className="mt-2 text-2xl font-bold text-de-black">
+                <p className="font-display text-sm font-bold text-foreground">DeutschQuiz</p>
+                <h2 className="mt-2 text-2xl font-bold text-foreground">
                   {authMode === "login" ? t.login : t.register}
                 </h2>
               </div>
@@ -1392,7 +1456,7 @@ export default function App() {
                   value={displayName}
                   onChange={(event) => setDisplayName(event.target.value)}
                   placeholder={t.displayNamePlaceholder}
-                  className="w-full rounded-2xl border border-line bg-de-cream px-4 py-3 text-sm outline-none focus:border-de-gold"
+                  className="w-full rounded-2xl border border-line bg-de-mist px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted focus:border-de-gold"
                 />
               )}
               <input
@@ -1401,7 +1465,7 @@ export default function App() {
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder={t.emailPlaceholder}
-                className="w-full rounded-2xl border border-line bg-de-cream px-4 py-3 text-sm outline-none focus:border-de-gold"
+                className="w-full rounded-2xl border border-line bg-de-mist px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted focus:border-de-gold"
               />
               <input
                 required
@@ -1410,7 +1474,7 @@ export default function App() {
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder={t.passwordPlaceholder}
-                className="w-full rounded-2xl border border-line bg-de-cream px-4 py-3 text-sm outline-none focus:border-de-gold"
+                className="w-full rounded-2xl border border-line bg-de-mist px-4 py-3 text-sm text-foreground outline-none placeholder:text-muted focus:border-de-gold"
               />
               {authError && (
                 <p className="rounded-2xl border border-de-red/30 bg-surface-rose px-3 py-2 text-xs font-semibold text-de-red">
