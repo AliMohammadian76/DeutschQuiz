@@ -101,6 +101,12 @@ html.light body {
   box-sizing: border-box;
 }
 
+.decorative-ui {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: default;
+}
+
 .glass-page {
   position: relative;
   isolation: isolate;

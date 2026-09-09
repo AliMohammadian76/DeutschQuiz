@@ -720,13 +720,6 @@ export default function App() {
     return { current, longest, activeDays, week };
   }, [history, uiLanguage]);
 
-  function scrollToBooks() {
-    document.getElementById("book-picker")?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }
-
   return (
     <main className="glass-page min-h-screen bg-background text-foreground">
       <div className="de-flag h-1.5 w-full animate-flag" aria-hidden>
@@ -849,7 +842,7 @@ export default function App() {
                     >
                       <span className="text-base">{icon}</span>
                       <span>{label}</span>
-                      <span className="w-4 text-center text-de-gold">{theme === value ? "✓" : ""}</span>
+                      <span className="decorative-ui w-4 text-center text-de-gold">{theme === value ? "✓" : ""}</span>
                     </button>
                   ))}
                   <div className="my-2 border-t border-line" />
@@ -865,7 +858,7 @@ export default function App() {
                   >
                     <span className="text-base">◎</span>
                     <span>{language === "fa" ? "فارسی" : "English"}</span>
-                    <span className="w-4 text-center text-de-gold">✓</span>
+                    <span className="decorative-ui w-4 text-center text-de-gold">✓</span>
                   </button>
                 </div>
               )}
@@ -904,23 +897,6 @@ export default function App() {
           <p className="mt-4 max-w-md text-sm leading-7 text-muted">
             {t.heroSubcopy}
           </p>
-          {activePage === "quizzes" && pickerStep === "book" && (
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <button
-                type="button"
-                onClick={scrollToBooks}
-                className="inline-flex items-center gap-2 rounded-full bg-foreground px-6 py-3.5 text-sm font-bold text-background shadow-lg transition hover:bg-de-gold hover:text-de-black"
-              >
-                {t.startQuiz}
-                <span aria-hidden>←</span>
-              </button>
-              <div className="flex flex-wrap gap-2">
-                <span className="pill-float text-foreground">{t.categoryVocabulary}</span>
-                <span className="pill-float bg-surface-warm text-foreground">{t.categoryGrammar}</span>
-                <span className="pill-float bg-surface-rose text-foreground">{t.categoryMixed}</span>
-              </div>
-            </div>
-          )}
         </section>
         )}
 
@@ -946,10 +922,10 @@ export default function App() {
           <section className="mt-8 overflow-hidden rounded-[2rem] border border-de-gold/25 bg-surface-warm p-5 sm:p-6">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
-                <div className="grid h-16 w-16 place-items-center rounded-3xl bg-de-red text-3xl text-white shadow-lg shadow-de-red/25" aria-hidden>🔥</div>
+                <div className="decorative-ui grid h-16 w-16 place-items-center rounded-3xl bg-de-red text-3xl text-white shadow-lg shadow-de-red/25" aria-hidden>🔥</div>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wider text-de-red">{uiLanguage === "fa" ? "استریک یادگیری" : "Learning streak"}</p>
-                  <p className="font-display mt-1 text-3xl font-extrabold text-foreground">{streak.current} {uiLanguage === "fa" ? "روز" : streak.current === 1 ? "day" : "days"}</p>
+                  <p className="decorative-ui font-display mt-1 text-3xl font-extrabold text-foreground">{streak.current} {uiLanguage === "fa" ? "روز" : streak.current === 1 ? "day" : "days"}</p>
                   <p className="mt-1 text-xs text-muted">{uiLanguage === "fa" ? `بهترین رکورد: ${streak.longest} روز` : `Best streak: ${streak.longest} days`}</p>
                 </div>
               </div>
@@ -958,8 +934,8 @@ export default function App() {
                   const active = streak.activeDays.has(day.key);
                   return (
                     <div key={day.key} className="flex flex-col items-center gap-1">
-                      <span className="text-[10px] font-bold text-muted">{day.label}</span>
-                      <span className={`grid h-9 w-9 place-items-center rounded-full text-xs font-bold ${active ? "bg-de-gold text-de-black shadow-md" : "border border-line bg-surface text-muted"}`}>
+                      <span className="decorative-ui text-[10px] font-bold text-muted">{day.label}</span>
+                      <span className={`decorative-ui grid h-9 w-9 place-items-center rounded-full text-xs font-bold ${active ? "bg-de-gold text-de-black shadow-md" : "border border-line bg-surface text-muted"}`}>
                         {active ? "✓" : day.day}
                       </span>
                     </div>
@@ -1333,7 +1309,7 @@ export default function App() {
                       }`}
                     >
                       <p className="font-display text-xl font-bold" dir="ltr">
-                        {completedBookNames.has(book.name) ? "✓ " : ""}
+                        <span className="decorative-ui">{completedBookNames.has(book.name) ? "✓ " : ""}</span>
                         {book.name}
                       </p>
                       <p className="mt-2 text-xs text-muted" dir="ltr">
@@ -1404,7 +1380,7 @@ export default function App() {
                             : "text-de-red"
                         }`}
                       >
-                        {completedLessonIds.has(lesson.id) ? "✓ " : ""}
+                        <span className="decorative-ui">{completedLessonIds.has(lesson.id) ? "✓ " : ""}</span>
                         Lektion {lesson.number}
                       </span>
                       <p className="mt-2 text-sm font-bold text-foreground" dir="ltr">
