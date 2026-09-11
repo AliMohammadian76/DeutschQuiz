@@ -305,15 +305,27 @@ export default function App() {
   }
 
   async function startQuiz(category: QuizCategory) {
+    if (!token) {
+      setQuizError(t.loginToSaveResult);
+      openAuth("login");
+      return;
+    }
     setQuizCategory(category);
     setQuizLoading(true);
     setQuizError("");
     setQuizResult(null);
     try {
       const response = await fetch(
-        `${apiBaseUrl}/lessons/${selectedLessonId}/questions?category=${category}`,
+        `${apiBaseUrl}/lessons/${selectedLessonId}/questions/generate?category=${category}&count=10`,
+        {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        },
       );
-      if (!response.ok) throw new Error(t.questionsUnavailable);
+      if (!response.ok) {
+        const message = await getError(response, t.questionsUnavailable);
+        throw new Error(response.status === 401 ? t.loginToSaveResult : message);
+      }
       const questions = (await response.json()) as QuizQuestion[];
       if (!questions.length) {
         throw new Error(t.noQuestionsForMode);

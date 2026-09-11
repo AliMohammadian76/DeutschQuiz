@@ -27,6 +27,7 @@ public static class DependencyInjection
         services.AddSingleton<JwtTokenService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IProgressService, ProgressService>();
+        services.AddHttpClient<IAiQuizGenerator, OllamaQuizGenerator>();
 
         return services;
     }
@@ -36,6 +37,7 @@ public static class DependencyInjection
     {
         services.AddSingleton<IAuthService, UnavailableAuthService>();
         services.AddSingleton<IProgressService, UnavailableProgressService>();
+        services.AddHttpClient<IAiQuizGenerator, OllamaQuizGenerator>();
         return services;
     }
 }

@@ -23,17 +23,13 @@ public sealed class ProgressService(QuizDbContext db) : IProgressService
             return null;
         }
 
+        var questionIds = answers.Select(answer => answer.QuestionId).ToArray();
         var questionsQuery = db.Questions
             .AsNoTracking()
             .Where(question =>
                 question.LessonId == request.LessonId &&
+                questionIds.Contains(question.Id) &&
                 question.IsActive);
-
-        if (request.Category != QuizCategory.Mixed)
-        {
-            questionsQuery = questionsQuery.Where(
-                question => question.Category == request.Category);
-        }
 
         var questions = await questionsQuery.ToListAsync(cancellationToken);
         if (questions.Count == 0 ||
