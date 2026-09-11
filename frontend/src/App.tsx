@@ -131,7 +131,7 @@ function sortLevels(levels: string[]) {
 const defaultLessonId = "11111111-1111-1111-1111-111111111111";
 
 const vocabularyUnits = [
-  { title: "سلام و معرفی", words: [["Hallo", "سلام"], ["Guten Morgen", "صبح بخیر"], ["Danke", "ممنون"], ["Bitte", "لطفاً / خواهش می‌کنم"], ["Tschüss", "خداحافظ"], ["Entschuldigung", "ببخشید"]] },
+  { title: "خانواده و دوستان", words: [["Familie", "خانواده"], ["Vater", "پدر"], ["Mutter", "مادر"], ["Eltern", "والدین"], ["Sohn", "پسر"], ["Tochter", "دختر"], ["Bruder", "برادر"], ["Schwester", "خواهر"], ["Großvater", "پدربزرگ"], ["Großmutter", "مادربزرگ"], ["Onkel", "عمو / دایی"], ["Neffe", "برادرزاده (پسر)"], ["Nichte", "برادرزاده (دختر)"], ["Familie besuchen", "دیدن خانواده"], ["ledig", "مجرد"], ["Tante", "عمه / خاله"], ["Cousin", "پسرعمو / پسرخاله"], ["Cousine", "دخترعمو / دخترخاله"], ["Freund", "دوست (مذکر)"], ["Freundin", "دوست (مونث)"], ["Ehefrau", "همسر (زن)"], ["Ehemann", "همسر (مرد)"], ["Kind", "کودک"], ["Baby", "نوزاد"], ["Elternteil", "یکی از والدین"], ["Schwiegervater", "پدرشوهر / پدرزن"], ["Schwiegermutter", "مادرشوهر / مادرزن"], ["verheiratet", "متأهل"], ["zusammen", "با هم"], ["allein", "تنها"]] },
   { title: "آدم‌ها و خانواده", words: [["die Familie", "خانواده"], ["die Mutter", "مادر"], ["der Vater", "پدر"], ["der Freund", "دوست (مذکر)"], ["die Freundin", "دوست (مونث)"], ["das Kind", "کودک"]] },
   { title: "خانه", words: [["das Haus", "خانه"], ["das Zimmer", "اتاق"], ["die Küche", "آشپزخانه"], ["die Tür", "در"], ["das Fenster", "پنجره"], ["der Tisch", "میز"]] },
   { title: "غذا و نوشیدنی", words: [["das Wasser", "آب"], ["der Kaffee", "قهوه"], ["das Brot", "نان"], ["der Apfel", "سیب"], ["essen", "غذا خوردن"], ["trinken", "نوشیدن"]] },
@@ -149,6 +149,31 @@ async function getError(response: Response, fallback: string) {
     return fallback;
   }
 }
+
+function speakGerman(text: string) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "de-DE";
+  utterance.rate = 0.82;
+  window.speechSynthesis.speak(utterance);
+}
+
+const germanArticles: Record<string, string> = {
+  Familie: "die", Vater: "der", Mutter: "die", Eltern: "die", Sohn: "der", Tochter: "die",
+  Bruder: "der", Schwester: "die", Großvater: "der", Großmutter: "die", Onkel: "der", Neffe: "der",
+  Nichte: "die", Tante: "die", Cousin: "der", Cousine: "die", Freund: "der", Freundin: "die",
+  Ehefrau: "die", Ehemann: "der", Kind: "das", Baby: "das", Elternteil: "das",
+  Schwiegervater: "der", Schwiegermutter: "die",
+};
+const germanPronunciations: Record<string, string> = {
+  Familie: "فامیلیه", Vater: "فاتر", Mutter: "موتر", Eltern: "اَلتِرن", Sohn: "زون", Tochter: "تُختِر",
+  Bruder: "برودر", Schwester: "شِوِستر", Großvater: "گروس‌فاتِر", Großmutter: "گروس‌موتر", Onkel: "اونکِل",
+  Neffe: "نِفِه", Nichte: "نیشتِه", "Familie besuchen": "فامیلیه بزوشِن", ledig: "لیدیش", Tante: "تانته",
+  Cousin: "کوزَنگ", Cousine: "کوزینِه", Freund: "فرویند", Freundin: "فرویندین", Ehefrau: "ایه‌فراو",
+  Ehemann: "ایه‌مان", Kind: "کیند", Baby: "بی‌بی", Elternteil: "اَلتِرن‌تایل", Schwiegervater: "ش‌ویگِرفاتر",
+  Schwiegermutter: "ش‌ویگِرموتِر", verheiratet: "فِرهایراتِت", zusammen: "تسوزامن", allein: "آلاین",
+};
 
 export default function App() {
   const [language, setLanguage] = useState<Language>(ACTIVE_UI_LANGUAGE);
@@ -201,6 +226,10 @@ export default function App() {
   const [vocabularyDirection, setVocabularyDirection] = useState<VocabularyDirection>("de-fa");
   const [vocabularyRevealed, setVocabularyRevealed] = useState(false);
   const [vocabularyKnown, setVocabularyKnown] = useState(0);
+  const [vocabularyReviewed, setVocabularyReviewed] = useState(0);
+  const [vocabularyStep, setVocabularyStep] = useState(1);
+  const [vocabularyAnswer, setVocabularyAnswer] = useState("");
+  const [vocabularyChecked, setVocabularyChecked] = useState(false);
 
   useEffect(() => {
     document.documentElement.lang = uiLanguage;
@@ -923,7 +952,7 @@ export default function App() {
         </section>
         )}
 
-        {activePage !== "quizzes" && activePage !== "quiz" && activePage !== "translator" && progress && (
+        {activePage !== "quizzes" && activePage !== "quiz" && activePage !== "translator" && activePage !== "vocabulary" && progress && (
           <section className="mt-12 grid gap-3 sm:grid-cols-4">
             {(
               [
@@ -1245,10 +1274,17 @@ export default function App() {
               <p className="mt-2 max-w-xl text-sm leading-7 text-muted">
                 {uiLanguage === "fa" ? "هر بار یک کارت را مرور کن؛ جهت ترجمه را عوض کن و با تکرار کوتاه، لغات را ماندگار کن." : "Review one card at a time, switch direction, and build a lasting vocabulary with short repetitions."}
               </p>
+              {vocabularyUnit !== null && (
+                <div className="mt-5 grid max-w-2xl grid-cols-3 gap-2 text-center">
+                  <div className="rounded-2xl border border-line bg-de-mist/50 px-3 py-3"><p className="text-[11px] text-muted">مرور شده</p><p className="mt-1 text-xl font-bold text-foreground">{vocabularyReviewed}</p></div>
+                  <div className="rounded-2xl border border-de-gold/35 bg-surface-warm px-3 py-3"><p className="text-[11px] text-muted">بلدم</p><p className="mt-1 text-xl font-bold text-foreground">{vocabularyKnown}</p></div>
+                  <div className="rounded-2xl border border-line bg-de-mist/50 px-3 py-3"><p className="text-[11px] text-muted">پیشرفت</p><p className="mt-1 text-xl font-bold text-foreground">{Math.round((vocabularyIndex / vocabularyUnits[vocabularyUnit].words.length) * 100)}٪</p></div>
+                </div>
+              )}
               {vocabularyUnit === null ? (
                 <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {vocabularyUnits.map((unit, index) => (
-                    <button key={unit.title} type="button" onClick={() => { setVocabularyUnit(index); setVocabularyIndex(0); setVocabularyRevealed(false); setVocabularyKnown(0); }} className="interactive-choice rounded-[1.5rem] border border-line bg-de-mist/40 p-4 text-right hover:border-de-gold hover:bg-surface-warm">
+                    <button key={unit.title} type="button" onClick={() => { setVocabularyUnit(index); setVocabularyIndex(0); setVocabularyStep(1); setVocabularyRevealed(false); setVocabularyKnown(0); setVocabularyReviewed(0); }} className="interactive-choice rounded-[1.5rem] border border-line bg-de-mist/40 p-4 text-right hover:border-de-gold hover:bg-surface-warm">
                       <span className="text-xs font-bold text-de-red">بخش {index + 1}</span>
                       <p className="mt-2 font-display text-lg font-bold text-foreground">{unit.title}</p>
                       <p className="mt-2 text-xs text-muted">{unit.words.length} واژه</p>
@@ -1257,26 +1293,68 @@ export default function App() {
                 </div>
               ) : (() => {
                 const unit = vocabularyUnits[vocabularyUnit];
-                const word = unit.words[vocabularyIndex];
-                const front = vocabularyDirection === "de-fa" ? word[0] : word[1];
-                const back = vocabularyDirection === "de-fa" ? word[1] : word[0];
+                return (
+                  <div className="mt-7">
+                    <div className="rounded-3xl border border-de-gold/30 bg-surface-warm p-5">
+                      <h3 className="font-display text-xl font-bold text-foreground">لغات آلمانی مربوط به {unit.title}</h3>
+                      <p className="mt-3 text-sm leading-7 text-muted">این لغات به شما کمک می‌کنند دربارهٔ {unit.title} صحبت کنید. روی آیکون بلندگو بزنید تا تلفظ آلمانی پخش شود.</p>
+                    </div>
+                    <div className="mt-5 overflow-hidden rounded-3xl border border-line" dir="ltr">
+                      <div className="grid grid-cols-[1.2fr_auto_1fr_1.2fr_auto] gap-3 bg-de-mist px-4 py-3 text-xs font-bold text-muted"><span>Deutsch</span><span>Artikel</span><span>Aussprache</span><span dir="rtl">ترجمه فارسی</span><span /></div>
+                      {unit.words.map(([german, persian], index) => (
+                        <div key={`${german}-${index}`} className="grid grid-cols-[1.2fr_auto_1fr_1.2fr_auto] items-center gap-3 border-t border-line px-4 py-3 text-sm hover:bg-surface-warm">
+                          <span className="font-bold text-foreground" dir="ltr">{german}</span>
+                          <span className="text-xs font-bold text-de-red">{germanArticles[german] ?? "—"}</span>
+                          <span className="text-xs text-muted">—</span>
+                          <span className="text-foreground" dir="rtl">{persian}</span>
+                          <button type="button" onClick={() => speakGerman(german)} aria-label={`پخش تلفظ ${german}`} className="grid h-9 w-9 place-items-center rounded-full border border-de-gold/40 text-lg text-de-gold transition hover:bg-de-gold/15">🔊</button>
+                        </div>
+                      ))}
+                    </div>
+                    <button type="button" onClick={() => setVocabularyUnit(null)} className="mt-5 rounded-xl border border-line px-4 py-2 text-sm font-semibold text-muted hover:bg-de-mist">← انتخاب موضوع دیگر</button>
+                  </div>
+                );
                 const finished = vocabularyIndex >= unit.words.length;
                 return finished ? (
                   <div className="mt-8 rounded-[1.75rem] border border-de-gold/40 bg-surface-warm p-8 text-center">
                     <p className="text-4xl">🎉</p><h3 className="mt-3 text-xl font-bold text-foreground">آفرین! بخش تمام شد</h3>
                     <p className="mt-2 text-sm text-muted">{vocabularyKnown} از {unit.words.length} واژه را بلد بودی.</p>
-                    <button type="button" onClick={() => { setVocabularyIndex(0); setVocabularyKnown(0); setVocabularyRevealed(false); }} className="mt-6 rounded-xl bg-de-red px-5 py-3 text-sm font-bold text-white">مرور دوباره</button>
+                    <button type="button" onClick={() => { setVocabularyIndex(0); setVocabularyKnown(0); setVocabularyRevealed(false); setVocabularyAnswer(""); setVocabularyChecked(false); }} className="mt-6 rounded-xl bg-de-red px-5 py-3 text-sm font-bold text-white">مرور دوباره</button>
                     <button type="button" onClick={() => setVocabularyUnit(null)} className="mt-3 block mx-auto text-sm font-semibold text-muted hover:text-foreground">انتخاب بخش دیگر</button>
                   </div>
                 ) : (
                   <div className="mt-7 max-w-2xl">
                     <div className="flex flex-wrap items-center justify-between gap-3"><button type="button" onClick={() => setVocabularyUnit(null)} className="text-sm font-semibold text-muted hover:text-foreground">← همه بخش‌ها</button><span className="rounded-full bg-de-mist px-3 py-1 text-xs font-bold text-muted">واژه {vocabularyIndex + 1} از {unit.words.length}</span></div>
-                    <div className="mt-5 rounded-[2rem] border border-de-gold/40 bg-gradient-to-br from-surface-warm to-surface p-8 text-center shadow-lg">
+                  <div className="mt-5 rounded-[2rem] border border-de-gold/40 bg-gradient-to-br from-surface-warm to-surface p-8 text-center shadow-lg">
+                    {(() => {
+                      const word = unit.words[vocabularyIndex];
+                      const front = vocabularyDirection === "de-fa" ? word[0] : word[1];
+                      const back = vocabularyDirection === "de-fa" ? word[1] : word[0];
+                      const answerMatches = vocabularyAnswer.trim().toLocaleLowerCase() === back.trim().toLocaleLowerCase();
+                      return <>
                       <p className="text-xs font-bold uppercase tracking-widest text-de-red">{vocabularyDirection === "de-fa" ? "آلمانی → فارسی" : "فارسی → آلمانی"}</p>
                       <p className="mt-8 font-display text-4xl font-extrabold text-foreground" dir="ltr">{front}</p>
-                      {vocabularyRevealed ? <p className="mt-5 text-2xl font-bold text-de-gold">{back}</p> : <button type="button" onClick={() => setVocabularyRevealed(true)} className="mt-7 rounded-full border border-de-gold/50 px-5 py-2 text-sm font-bold text-foreground hover:bg-de-gold/15">نمایش ترجمه</button>}
-                    </div>
-                    <div className="mt-4 flex flex-wrap justify-center gap-2"><button type="button" onClick={() => { setVocabularyDirection((d) => d === "de-fa" ? "fa-de" : "de-fa"); setVocabularyRevealed(false); }} className="rounded-xl border border-line px-4 py-2 text-sm font-semibold text-muted hover:bg-de-mist">↔ تغییر جهت</button>{vocabularyRevealed && <><button type="button" onClick={() => { setVocabularyIndex((i) => i + 1); setVocabularyRevealed(false); }} className="rounded-xl border border-de-red/40 px-4 py-2 text-sm font-semibold text-de-red hover:bg-surface-rose">هنوز یاد نگرفتم</button><button type="button" onClick={() => { setVocabularyKnown((n) => n + 1); setVocabularyIndex((i) => i + 1); setVocabularyRevealed(false); }} className="rounded-xl bg-de-red px-4 py-2 text-sm font-bold text-white">بلدم ✓</button></>}</div>
+                      <div className="mx-auto mt-6 max-w-md text-right">
+                        <div className="mb-2 flex items-center justify-between text-[11px] font-bold text-muted"><span>روش ۸ مرحله‌ای</span><span>مرحله {vocabularyStep} از ۸</span></div>
+                        <div className="flex gap-1" dir="ltr">{Array.from({ length: 8 }, (_, i) => <span key={i} className={`h-1.5 flex-1 rounded-full ${i < vocabularyStep ? "bg-de-gold" : "bg-line"}`} />)}</div>
+                        <p className="mt-4 text-sm leading-7 text-muted">
+                          {vocabularyStep === 1 && "۱) با واژه آشنا شو و تلفظش را با صدای بلند تکرار کن."}
+                          {vocabularyStep === 2 && `۲) واژه را در زمینه ببین: Heute lerne ich „${front}“.`}
+                          {vocabularyStep === 3 && "۳) خودت واژه را بنویس."}
+                          {vocabularyStep === 4 && `۴) معنی ساده: ${back}`}
+                          {vocabularyStep === 5 && `۵) مثال معلم: Ich übe heute das Wort „${front}“.`}
+                          {vocabularyStep === 6 && "۶) با این واژه یک جمله از خودت بنویس."}
+                          {vocabularyStep === 7 && "۷) بدون نگاه‌کردن، ترجمه را تایپ کن و بررسی بزن."}
+                          {vocabularyStep === 8 && "۸) یک بار دیگر واژه و معنی را از حفظ به یاد بیاور."}
+                        </p>
+                      </div>
+                      <div className="mx-auto mt-7 flex max-w-md gap-2"><input value={vocabularyAnswer} onChange={(e) => setVocabularyAnswer(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") setVocabularyStep((s) => Math.min(8, s + 1)); }} placeholder={`ترجمه «${front}» را بنویس...`} className="min-w-0 flex-1 rounded-xl border border-line bg-surface px-4 py-3 text-center text-sm text-foreground outline-none focus:border-de-gold" dir="auto" /></div>
+                      {vocabularyRevealed && <p className="mt-3 text-2xl font-bold text-de-gold">{back}</p>}
+                      {!vocabularyRevealed && <button type="button" onClick={() => setVocabularyRevealed(true)} className="mt-4 rounded-full border border-de-gold/50 px-5 py-2 text-sm font-bold text-foreground hover:bg-de-gold/15">نمایش ترجمه</button>}
+                      </>;
+                    })()}
+                  </div>
+                    <div className="mt-4 flex flex-wrap justify-center gap-2"><button type="button" onClick={() => { setVocabularyDirection((d) => d === "de-fa" ? "fa-de" : "de-fa"); setVocabularyRevealed(false); setVocabularyAnswer(""); setVocabularyChecked(false); setVocabularyStep(1); }} className="rounded-xl border border-line px-4 py-2 text-sm font-semibold text-muted hover:bg-de-mist">↔ تغییر جهت</button><button type="button" onClick={() => { if (vocabularyStep < 8) { setVocabularyStep((s) => s + 1); } else { setVocabularyIndex((i) => i + 1); setVocabularyStep(1); setVocabularyKnown((n) => n + 1); } setVocabularyAnswer(""); setVocabularyRevealed(false); setVocabularyChecked(false); }} className="rounded-xl bg-de-red px-4 py-2 text-sm font-bold text-white">{vocabularyStep < 8 ? "مرحله بعد ←" : "واژه بعد ✓"}</button></div>
                   </div>
                 );
               })()}
