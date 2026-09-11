@@ -101,6 +101,32 @@ html.light body {
   box-sizing: border-box;
 }
 
+button:not(:disabled),
+[role="button"] {
+  cursor: pointer;
+}
+
+/* Make selectable cards visibly interactive when the pointer moves over them. */
+.interactive-choice {
+  position: relative;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.interactive-choice:hover:not(:disabled) {
+  z-index: 1;
+  transform: translateY(-3px) scale(1.01);
+  box-shadow: 0 12px 26px rgb(0 0 0 / 18%), 0 0 0 2px rgb(231 184 75 / 22%);
+}
+
+.interactive-choice:focus-visible {
+  outline: 3px solid rgb(231 184 75 / 78%);
+  outline-offset: 3px;
+}
+
 .decorative-ui {
   user-select: none;
   -webkit-user-select: none;

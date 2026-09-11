@@ -11,16 +11,10 @@ public interface IQuizService
         Guid lessonId,
         QuizCategory? category = null,
         CancellationToken cancellationToken = default);
-
-    Task AddGeneratedQuestionsAsync(
-        IReadOnlyList<QuizQuestion> questions,
-        CancellationToken cancellationToken = default);
 }
 
 public sealed class InMemoryQuizService : IQuizService
 {
-    private readonly List<QuizQuestion> generatedQuestions = [];
-
     public Task<IReadOnlyList<Lesson>> GetLessonsAsync(
         CancellationToken cancellationToken = default) =>
         Task.FromResult(QuizContentCatalog.GetLessons());
@@ -30,19 +24,11 @@ public sealed class InMemoryQuizService : IQuizService
         QuizCategory? category = null,
         CancellationToken cancellationToken = default)
     {
-        var generated = generatedQuestions.Where(q => q.LessonId == lessonId && (category is null || category == QuizCategory.Mixed || q.Category == category)).ToList();
-        var questions = (generated.Count > 0 ? generated : QuizContentCatalog.GetQuestions(lessonId, category))
+        var questions = QuizContentCatalog.GetQuestions(lessonId, category)
             .Select(OptionOrder.WithShuffledOptions)
             .ToList();
 
         return Task.FromResult<IReadOnlyList<QuizQuestion>>(questions);
-    }
-
-    public Task AddGeneratedQuestionsAsync(IReadOnlyList<QuizQuestion> questions, CancellationToken cancellationToken = default)
-    {
-        generatedQuestions.RemoveAll(existing => questions.Any(question => question.LessonId == existing.LessonId && question.Category == existing.Category));
-        generatedQuestions.AddRange(questions);
-        return Task.CompletedTask;
     }
 }
 

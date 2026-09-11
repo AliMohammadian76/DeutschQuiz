@@ -57,7 +57,6 @@ public sealed class QuizDbContext(DbContextOptions<QuizDbContext> options) : DbC
             entity.Property(question => question.Prompt).HasMaxLength(1000).IsRequired();
             entity.Property(question => question.CorrectAnswer).HasMaxLength(500).IsRequired();
             entity.Property(question => question.Explanation).HasMaxLength(2000);
-            entity.Property(question => question.IsGenerated).HasDefaultValue(false).IsRequired();
             entity.HasOne(question => question.Lesson)
                 .WithMany(lesson => lesson.Questions)
                 .HasForeignKey(question => question.LessonId)
@@ -151,7 +150,6 @@ public sealed class QuizQuestionEntity
     public string CorrectAnswer { get; set; } = string.Empty;
     public string Explanation { get; set; } = string.Empty;
     public bool IsActive { get; set; } = true;
-    public bool IsGenerated { get; set; }
     public LessonEntity Lesson { get; set; } = null!;
     public ICollection<QuestionOptionEntity> Options { get; set; } = [];
 }

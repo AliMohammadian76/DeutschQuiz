@@ -48,9 +48,10 @@ const quizModeMeta = [
 ] as const;
 
 type AuthMode = "login" | "register";
-type AppPage = "quizzes" | "progress" | "history" | "quiz" | "translator";
+type AppPage = "quizzes" | "progress" | "history" | "quiz" | "translator" | "vocabulary";
 type QuizPickerStep = "book" | "level" | "lesson" | "mode";
 type TranslationDirection = "de-fa" | "fa-de";
+type VocabularyDirection = "de-fa" | "fa-de";
 type AuthResult = { accessToken: string; user: { displayName: string } };
 type Lesson = {
   id: string;
@@ -129,6 +130,17 @@ function sortLevels(levels: string[]) {
 
 const defaultLessonId = "11111111-1111-1111-1111-111111111111";
 
+const vocabularyUnits = [
+  { title: "سلام و معرفی", words: [["Hallo", "سلام"], ["Guten Morgen", "صبح بخیر"], ["Danke", "ممنون"], ["Bitte", "لطفاً / خواهش می‌کنم"], ["Tschüss", "خداحافظ"], ["Entschuldigung", "ببخشید"]] },
+  { title: "آدم‌ها و خانواده", words: [["die Familie", "خانواده"], ["die Mutter", "مادر"], ["der Vater", "پدر"], ["der Freund", "دوست (مذکر)"], ["die Freundin", "دوست (مونث)"], ["das Kind", "کودک"]] },
+  { title: "خانه", words: [["das Haus", "خانه"], ["das Zimmer", "اتاق"], ["die Küche", "آشپزخانه"], ["die Tür", "در"], ["das Fenster", "پنجره"], ["der Tisch", "میز"]] },
+  { title: "غذا و نوشیدنی", words: [["das Wasser", "آب"], ["der Kaffee", "قهوه"], ["das Brot", "نان"], ["der Apfel", "سیب"], ["essen", "غذا خوردن"], ["trinken", "نوشیدن"]] },
+  { title: "زمان و روزمره", words: [["heute", "امروز"], ["morgen", "فردا / صبح"], ["gestern", "دیروز"], ["der Tag", "روز"], ["die Woche", "هفته"], ["jetzt", "الان"]] },
+  { title: "شهر و مسیر", words: [["die Stadt", "شهر"], ["der Bahnhof", "ایستگاه قطار"], ["die Straße", "خیابان"], ["links", "چپ"], ["rechts", "راست"], ["geradeaus", "مستقیم"]] },
+  { title: "کارهای مهم", words: [["lernen", "یاد گرفتن"], ["arbeiten", "کار کردن"], ["lesen", "خواندن"], ["schreiben", "نوشتن"], ["sprechen", "صحبت کردن"], ["verstehen", "فهمیدن"]] },
+  { title: "صفت‌های پرکاربرد", words: [["gut", "خوب"], ["schlecht", "بد"], ["groß", "بزرگ"], ["klein", "کوچک"], ["schnell", "سریع"], ["langsam", "آهسته"]] },
+] as const;
+
 async function getError(response: Response, fallback: string) {
   try {
     const body = await response.json();
@@ -184,6 +196,11 @@ export default function App() {
     useState<TranslationDirection>("de-fa");
   const [translationLoading, setTranslationLoading] = useState(false);
   const [translationError, setTranslationError] = useState("");
+  const [vocabularyUnit, setVocabularyUnit] = useState<number | null>(null);
+  const [vocabularyIndex, setVocabularyIndex] = useState(0);
+  const [vocabularyDirection, setVocabularyDirection] = useState<VocabularyDirection>("de-fa");
+  const [vocabularyRevealed, setVocabularyRevealed] = useState(false);
+  const [vocabularyKnown, setVocabularyKnown] = useState(0);
 
   useEffect(() => {
     document.documentElement.lang = uiLanguage;
@@ -305,27 +322,15 @@ export default function App() {
   }
 
   async function startQuiz(category: QuizCategory) {
-    if (!token) {
-      setQuizError(t.loginToSaveResult);
-      openAuth("login");
-      return;
-    }
     setQuizCategory(category);
     setQuizLoading(true);
     setQuizError("");
     setQuizResult(null);
     try {
       const response = await fetch(
-        `${apiBaseUrl}/lessons/${selectedLessonId}/questions/generate?category=${category}&count=10`,
-        {
-          method: "POST",
-          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-        },
+        `${apiBaseUrl}/lessons/${selectedLessonId}/questions?category=${category}`,
       );
-      if (!response.ok) {
-        const message = await getError(response, t.questionsUnavailable);
-        throw new Error(response.status === 401 ? t.loginToSaveResult : message);
-      }
+      if (!response.ok) throw new Error(t.questionsUnavailable);
       const questions = (await response.json()) as QuizQuestion[];
       if (!questions.length) {
         throw new Error(t.noQuestionsForMode);
@@ -673,10 +678,10 @@ export default function App() {
 
   const textAlign = uiLanguage === "en" ? "text-left" : "text-right";
   const pageLabels = uiLanguage === "fa"
-    ? { quizzes: "آزمون‌ها", progress: "پیشرفت", history: "تاریخچه آزمون‌ها", translator: "مترجم" }
-    : { quizzes: "Quizzes", progress: "Progress", history: "Quiz history", translator: "Translator" };
+    ? { quizzes: "آزمون‌ها", progress: "پیشرفت", history: "تاریخچه آزمون‌ها", translator: "مترجم", vocabulary: "لغات‌آموزی" }
+    : { quizzes: "Quizzes", progress: "Progress", history: "Quiz history", translator: "Translator", vocabulary: "Vocabulary" };
 
-  function NavIcon({ page }: { page: "quizzes" | "progress" | "history" | "translator" }) {
+  function NavIcon({ page }: { page: "quizzes" | "progress" | "history" | "translator" | "vocabulary" }) {
     const common = { width: 28, height: 28, viewBox: "0 0 28 28", fill: "none", xmlns: "http://www.w3.org/2000/svg" };
     if (page === "quizzes") {
       return <svg {...common}><defs><linearGradient id="quizGlass" x1="4" y1="3" x2="24" y2="25"><stop stopColor="#fff" stopOpacity=".72"/><stop offset=".45" stopColor="#e7b84b"/><stop offset="1" stopColor="#e54858"/></linearGradient></defs><rect x="6.5" y="4" width="14" height="18" rx="3.5" stroke="url(#quizGlass)" strokeWidth="1.7"/><path d="m10 15 2.4 2.4L18 11.8" stroke="#f8d77d" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><path d="M10 8.5h7" stroke="#fff" strokeOpacity=".7" strokeWidth="1.2" strokeLinecap="round"/></svg>;
@@ -686,6 +691,9 @@ export default function App() {
     }
     if (page === "history") {
       return <svg {...common}><defs><linearGradient id="historyGlass" x1="4" y1="22" x2="24" y2="5"><stop stopColor="#e54858"/><stop offset=".5" stopColor="#e7b84b"/><stop offset="1" stopColor="#fff" stopOpacity=".8"/></linearGradient></defs><path d="M7.2 10.2A8.2 8.2 0 1 1 6 17" stroke="url(#historyGlass)" strokeWidth="1.8" strokeLinecap="round"/><path d="M7.2 6.5v3.8H3.5" stroke="#fff" strokeOpacity=".75" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M14 9.2v5l3.2 1.8" stroke="#f8d77d" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+    }
+    if (page === "vocabulary") {
+      return <svg {...common}><defs><linearGradient id="vocabGlass" x1="4" y1="22" x2="24" y2="5"><stop stopColor="#e54858"/><stop offset=".5" stopColor="#e7b84b"/><stop offset="1" stopColor="#fff" stopOpacity=".8"/></linearGradient></defs><path d="M6 5.5h11.5A3.5 3.5 0 0 1 21 9v12.5H9.5A3.5 3.5 0 0 1 6 18V5.5Z" stroke="url(#vocabGlass)" strokeWidth="1.6"/><path d="M9 9h8M9 13h8M9 17h5" stroke="#fff" strokeOpacity=".8" strokeWidth="1.3" strokeLinecap="round"/><path d="M6 5.5h-1A2.5 2.5 0 0 0 2.5 8v10A3.5 3.5 0 0 0 6 21.5" stroke="#f8d77d" strokeWidth="1.4" strokeLinecap="round"/></svg>;
     }
     return <svg {...common}><defs><linearGradient id="translateGlass" x1="4" y1="22" x2="24" y2="6"><stop stopColor="#e54858"/><stop offset=".5" stopColor="#e7b84b"/><stop offset="1" stopColor="#fff" stopOpacity=".8"/></linearGradient></defs><path d="M5 7.5A3.5 3.5 0 0 1 8.5 4h11A3.5 3.5 0 0 1 23 7.5v7a3.5 3.5 0 0 1-3.5 3.5h-6.2L8 22v-4H8.5A3.5 3.5 0 0 1 5 14.5v-7Z" stroke="url(#translateGlass)" strokeWidth="1.6"/><path d="M10 8.5h5M12.5 7v1.5M10 15l2.3-4 2.3 4M11 13.2h2.7" stroke="#fff" strokeOpacity=".8" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round"/></svg>;
   }
@@ -761,7 +769,7 @@ export default function App() {
             <span className="account-card__chevron" aria-hidden>‹</span>
           </div>
           <nav className="app-sidebar__nav" aria-label="Main navigation">
-            {(["quizzes", "progress", "history", "translator"] as const).map((page) => {
+            {(["quizzes", "progress", "history", "translator", "vocabulary"] as const).map((page) => {
               const active = activePage === page || (page === "quizzes" && activePage === "quiz");
               return (
                 <button
@@ -1227,6 +1235,55 @@ export default function App() {
           </section>
         )}
 
+        {activePage === "vocabulary" && (
+          <section className="mt-12 pb-16">
+            <div className="rounded-[2rem] border border-line bg-surface p-5 shadow-[var(--card-shadow)] sm:p-7">
+              <p className="text-xs font-bold uppercase tracking-wider text-de-red">Wortschatz</p>
+              <h2 className="mt-2 font-display text-2xl font-bold text-foreground">
+                {uiLanguage === "fa" ? "لغات‌آموزی در ۸ بخش" : "Vocabulary in 8 units"}
+              </h2>
+              <p className="mt-2 max-w-xl text-sm leading-7 text-muted">
+                {uiLanguage === "fa" ? "هر بار یک کارت را مرور کن؛ جهت ترجمه را عوض کن و با تکرار کوتاه، لغات را ماندگار کن." : "Review one card at a time, switch direction, and build a lasting vocabulary with short repetitions."}
+              </p>
+              {vocabularyUnit === null ? (
+                <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  {vocabularyUnits.map((unit, index) => (
+                    <button key={unit.title} type="button" onClick={() => { setVocabularyUnit(index); setVocabularyIndex(0); setVocabularyRevealed(false); setVocabularyKnown(0); }} className="interactive-choice rounded-[1.5rem] border border-line bg-de-mist/40 p-4 text-right hover:border-de-gold hover:bg-surface-warm">
+                      <span className="text-xs font-bold text-de-red">بخش {index + 1}</span>
+                      <p className="mt-2 font-display text-lg font-bold text-foreground">{unit.title}</p>
+                      <p className="mt-2 text-xs text-muted">{unit.words.length} واژه</p>
+                    </button>
+                  ))}
+                </div>
+              ) : (() => {
+                const unit = vocabularyUnits[vocabularyUnit];
+                const word = unit.words[vocabularyIndex];
+                const front = vocabularyDirection === "de-fa" ? word[0] : word[1];
+                const back = vocabularyDirection === "de-fa" ? word[1] : word[0];
+                const finished = vocabularyIndex >= unit.words.length;
+                return finished ? (
+                  <div className="mt-8 rounded-[1.75rem] border border-de-gold/40 bg-surface-warm p-8 text-center">
+                    <p className="text-4xl">🎉</p><h3 className="mt-3 text-xl font-bold text-foreground">آفرین! بخش تمام شد</h3>
+                    <p className="mt-2 text-sm text-muted">{vocabularyKnown} از {unit.words.length} واژه را بلد بودی.</p>
+                    <button type="button" onClick={() => { setVocabularyIndex(0); setVocabularyKnown(0); setVocabularyRevealed(false); }} className="mt-6 rounded-xl bg-de-red px-5 py-3 text-sm font-bold text-white">مرور دوباره</button>
+                    <button type="button" onClick={() => setVocabularyUnit(null)} className="mt-3 block mx-auto text-sm font-semibold text-muted hover:text-foreground">انتخاب بخش دیگر</button>
+                  </div>
+                ) : (
+                  <div className="mt-7 max-w-2xl">
+                    <div className="flex flex-wrap items-center justify-between gap-3"><button type="button" onClick={() => setVocabularyUnit(null)} className="text-sm font-semibold text-muted hover:text-foreground">← همه بخش‌ها</button><span className="rounded-full bg-de-mist px-3 py-1 text-xs font-bold text-muted">واژه {vocabularyIndex + 1} از {unit.words.length}</span></div>
+                    <div className="mt-5 rounded-[2rem] border border-de-gold/40 bg-gradient-to-br from-surface-warm to-surface p-8 text-center shadow-lg">
+                      <p className="text-xs font-bold uppercase tracking-widest text-de-red">{vocabularyDirection === "de-fa" ? "آلمانی → فارسی" : "فارسی → آلمانی"}</p>
+                      <p className="mt-8 font-display text-4xl font-extrabold text-foreground" dir="ltr">{front}</p>
+                      {vocabularyRevealed ? <p className="mt-5 text-2xl font-bold text-de-gold">{back}</p> : <button type="button" onClick={() => setVocabularyRevealed(true)} className="mt-7 rounded-full border border-de-gold/50 px-5 py-2 text-sm font-bold text-foreground hover:bg-de-gold/15">نمایش ترجمه</button>}
+                    </div>
+                    <div className="mt-4 flex flex-wrap justify-center gap-2"><button type="button" onClick={() => { setVocabularyDirection((d) => d === "de-fa" ? "fa-de" : "de-fa"); setVocabularyRevealed(false); }} className="rounded-xl border border-line px-4 py-2 text-sm font-semibold text-muted hover:bg-de-mist">↔ تغییر جهت</button>{vocabularyRevealed && <><button type="button" onClick={() => { setVocabularyIndex((i) => i + 1); setVocabularyRevealed(false); }} className="rounded-xl border border-de-red/40 px-4 py-2 text-sm font-semibold text-de-red hover:bg-surface-rose">هنوز یاد نگرفتم</button><button type="button" onClick={() => { setVocabularyKnown((n) => n + 1); setVocabularyIndex((i) => i + 1); setVocabularyRevealed(false); }} className="rounded-xl bg-de-red px-4 py-2 text-sm font-bold text-white">بلدم ✓</button></>}</div>
+                  </div>
+                );
+              })()}
+            </div>
+          </section>
+        )}
+
         {activePage === "quizzes" && (
           <section className="mt-12 pb-16">
             {pickerStep !== "book" && (
@@ -1316,7 +1373,7 @@ export default function App() {
                     <button
                       key={book.name}
                       onClick={() => selectBook(book.name)}
-                      className={`rounded-[1.75rem] border p-5 transition ${textAlign} ${
+                      className={`interactive-choice rounded-[1.75rem] border p-5 transition ${textAlign} ${
                         completedBookNames.has(book.name)
                           ? "border-success/40 bg-success-bg text-foreground hover:border-success"
                           : "border-line bg-de-mist/40 text-foreground hover:border-de-red"
@@ -1349,7 +1406,7 @@ export default function App() {
                     <button
                       key={level}
                       onClick={() => selectLevel(level)}
-                      className="rounded-[1.75rem] border border-line bg-de-mist/40 p-5 text-foreground transition hover:border-de-gold hover:bg-surface-warm"
+                      className="interactive-choice rounded-[1.75rem] border border-line bg-de-mist/40 p-5 text-foreground transition hover:border-de-gold hover:bg-surface-warm"
                     >
                       <p className="font-display text-2xl font-bold" dir="ltr">
                         {level}
@@ -1381,7 +1438,7 @@ export default function App() {
                     <button
                       key={lesson.id}
                       onClick={() => selectLesson(lesson.id)}
-                      className={`rounded-[1.5rem] border p-4 transition ${textAlign} ${
+                      className={`interactive-choice rounded-[1.5rem] border p-4 transition ${textAlign} ${
                         completedLessonIds.has(lesson.id)
                           ? "border-success/40 bg-success-bg hover:border-success"
                           : "border-line bg-de-mist/40 hover:border-de-gold hover:bg-surface-warm"
@@ -1434,7 +1491,7 @@ export default function App() {
                         key={mode.category}
                         onClick={() => openOrResumeQuiz(mode.category)}
                         disabled={quizLoading}
-                        className={`group rounded-[1.75rem] border p-5 transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait ${textAlign} ${
+                        className={`interactive-choice group rounded-[1.75rem] border p-5 transition hover:-translate-y-0.5 hover:shadow-lg disabled:cursor-wait ${textAlign} ${
                           sectionInProgress
                             ? "border-de-amber bg-surface-warm"
                             : sectionCompleted

@@ -38,10 +38,6 @@ public sealed class EfQuizService(QuizDbContext db) : IQuizService
             query = query.Where(question => question.Category == category);
         }
 
-        var hasGenerated = await query.AnyAsync(question => question.IsGenerated, cancellationToken);
-        if (hasGenerated)
-            query = query.Where(question => question.IsGenerated);
-
         var questions = await query
             .OrderBy(question => question.Id)
             .Select(question => new QuizQuestion(
@@ -61,44 +57,5 @@ public sealed class EfQuizService(QuizDbContext db) : IQuizService
         return questions
             .Select(OptionOrder.WithShuffledOptions)
             .ToList();
-    }
-
-    public async Task AddGeneratedQuestionsAsync(
-        IReadOnlyList<QuizQuestion> questions,
-        CancellationToken cancellationToken = default)
-    {
-        if (questions.Count == 0) return;
-
-        var lessonId = questions[0].LessonId;
-        var category = questions[0].Category;
-        var previous = await db.Questions
-            .Where(question => question.LessonId == lessonId && question.Category == category && question.IsGenerated)
-            .ToListAsync(cancellationToken);
-        db.Questions.RemoveRange(previous);
-
-        foreach (var question in questions)
-        {
-            var entity = new QuizQuestionEntity
-            {
-                Id = question.Id,
-                LessonId = question.LessonId,
-                Category = question.Category,
-                Type = question.Type,
-                Prompt = question.Prompt,
-                CorrectAnswer = question.CorrectAnswer,
-                Explanation = question.Explanation,
-                IsActive = true,
-                IsGenerated = true,
-                Options = question.Options.Select((text, index) => new QuestionOptionEntity
-                {
-                    Id = Guid.NewGuid(),
-                    SortOrder = index,
-                    Text = text,
-                }).ToList(),
-            };
-            db.Questions.Add(entity);
-        }
-
-        await db.SaveChangesAsync(cancellationToken);
     }
 }
